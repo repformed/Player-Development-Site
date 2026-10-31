@@ -301,7 +301,8 @@ test("private interest distinguishes unrecorded, unchecked and earlier affirmati
   const inbox = page.getByRole("region", {
     name: "Private package interest inbox",
   });
-  await expect(inbox).not.toContainText("Launch email:");
+  await expect(inbox).toContainText("Latest launch-email choice: Not recorded");
+  await expect(inbox).toContainText("Launch-email permission: Review needed");
   await expect(
     inbox.getByText("Launch preference record", { exact: true }),
   ).toHaveCount(0);
@@ -315,7 +316,10 @@ test("private interest distinguishes unrecorded, unchecked and earlier affirmati
   await inbox
     .getByRole("button", { name: "Refresh interest requests" })
     .click();
-  await expect(inbox).toContainText("Launch email: Not requested");
+  await expect(inbox).toContainText("Latest launch-email choice: Not selected");
+  await expect(inbox).toContainText("Launch request on record for this email.");
+  await expect(inbox).toContainText("Check prior requests and withdrawals");
+  await expect(inbox).not.toContainText("Launch email: Not requested");
   await expect(inbox.locator("details")).toHaveCount(0);
   await expect(inbox).not.toContainText("repformed-launch-notice-v1");
   await expect(inbox).not.toContainText("2026-10-27");
@@ -324,7 +328,10 @@ test("private interest distinguishes unrecorded, unchecked and earlier affirmati
   await inbox
     .getByRole("button", { name: "Refresh interest requests" })
     .click();
-  await expect(inbox).toContainText("Launch email: Requested");
+  await expect(inbox).toContainText("Latest launch-email choice: Requested");
+  await expect(inbox).not.toContainText(
+    "Launch request on record for this email.",
+  );
   Object.assign(data.interestRows[0], {
     adult_name: "",
     launch_choice: false,
@@ -334,11 +341,84 @@ test("private interest distinguishes unrecorded, unchecked and earlier affirmati
   await inbox
     .getByRole("button", { name: "Refresh interest requests" })
     .click();
-  await expect(inbox).not.toContainText("Launch email:");
+  await expect(inbox).toContainText("Latest launch-email choice: Not recorded");
+  await expect(inbox).toContainText("Launch request on record for this email.");
+  await expect(inbox).toContainText("Launch-email permission: Review needed");
   await expect(inbox).not.toContainText("Adult contact");
   await expect(inbox).toContainText("fictional-adult@example.test");
   expect(data.interestRows[0].launch_requested_at).toBe("2026-10-27T10:00:00Z");
   expect(data.calls.provider).toBe(0);
+  expect(data.calls.preferences).toBe(0);
+});
+
+test("an unchecked first form does not imply an opt-in or a withdrawal", async ({
+  page,
+  context,
+}) => {
+  const data = await alerts(context);
+  Object.assign(data.interestRows[0], {
+    launch_choice: false,
+    launch_choice_at: "2026-10-31T10:00:00Z",
+    launch_notice_version: "repformed-launch-notice-v1",
+    launch_requested_at: null,
+    launch_requested_version: null,
+  });
+  await page.goto("./?source=app#interest");
+  const inbox = page.getByRole("region", {
+    name: "Private package interest inbox",
+  });
+  const card = inbox.locator("li").first();
+  await expect(card).toContainText("Latest launch-email choice: Not selected");
+  await expect(card).not.toContainText("Launch request on record");
+  await expect(card).not.toContainText("withdrawn");
+  await expect(inbox).toContainText("Launch-email permission: Review needed");
+  expect(data.calls.provider).toBe(0);
+  expect(data.calls.preferences).toBe(0);
+});
+
+test("incomplete legacy choice metadata never becomes a yes or no permission", async ({
+  page,
+  context,
+}) => {
+  const data = await alerts(context);
+  await page.goto("./?source=app#interest");
+  const inbox = page.getByRole("region", {
+    name: "Private package interest inbox",
+  });
+  for (const choice of [
+    {
+      launch_choice: true,
+      launch_choice_at: null,
+      launch_notice_version: "repformed-launch-notice-v1",
+    },
+    {
+      launch_choice: null,
+      launch_choice_at: "2026-10-31T10:00:00Z",
+      launch_notice_version: "repformed-launch-notice-v1",
+    },
+    {
+      launch_choice: false,
+      launch_choice_at: "2026-10-31T10:00:00Z",
+      launch_notice_version: null,
+    },
+  ]) {
+    Object.assign(data.interestRows[0], choice);
+    await inbox
+      .getByRole("button", { name: "Refresh interest requests" })
+      .click();
+    await expect(inbox).toContainText(
+      "Latest launch-email choice: Not recorded",
+    );
+    await expect(inbox).not.toContainText(
+      "Latest launch-email choice: Requested",
+    );
+    await expect(inbox).not.toContainText(
+      "Latest launch-email choice: Not selected",
+    );
+    await expect(inbox).toContainText("Launch-email permission: Review needed");
+  }
+  expect(data.calls.provider).toBe(0);
+  expect(data.calls.preferences).toBe(0);
 });
 
 test("interest cards contain only recorded inputs and never expose technical details", async ({
@@ -351,13 +431,16 @@ test("interest cards contain only recorded inputs and never expose technical det
     launch_choice: true,
     launch_choice_at: "2026-10-28T10:00:00Z",
     launch_notice_version: "repformed-launch-notice-v1",
+    launch_requested_at: "2026-10-28T10:00:00Z",
+    launch_requested_version: "repformed-launch-notice-v1",
   });
   await page.goto("./?source=app#interest");
   const inbox = page.getByRole("region", {
     name: "Private package interest inbox",
   });
   const card = inbox.locator("li").first();
-  await expect(card).toContainText("Launch email: Requested");
+  await expect(card).toContainText("Latest launch-email choice: Requested");
+  await expect(inbox).toContainText("Launch-email permission: Review needed");
   expect(
     (await card.innerText())
       .split(/\n+/)
@@ -367,7 +450,7 @@ test("interest cards contain only recorded inputs and never expose technical det
     "Fictional Adult",
     "fictional-adult@example.test",
     "Elite Coaching",
-    "Launch email: Requested",
+    "Latest launch-email choice: Requested",
   ]);
   await expect(card.locator("details,summary")).toHaveCount(0);
   expect(data.interestRows[0].email_state).toBe("retry");
