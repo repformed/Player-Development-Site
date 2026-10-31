@@ -505,12 +505,12 @@ export default function App() {
                         Dashboard <ArrowUpRight size={18} />
                       </a>
                     )}
-                  {!nav.some(([id]) => id === "account") && (
-                    <a href="#account">
-                      {shared.signedIn ? "Account settings" : "Log in"}{" "}
-                      <ArrowUpRight size={18} />
-                    </a>
-                  )}
+                  {!shared.signedIn &&
+                    !nav.some(([id]) => id === "account") && (
+                      <a href="#account">
+                        Log in <ArrowUpRight size={18} />
+                      </a>
+                    )}
                   {!nav.some(([id]) => id === "membership") && (
                     <a href="#membership">
                       Proposed packages
