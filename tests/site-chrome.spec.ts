@@ -85,6 +85,10 @@ for (const role of [
       await expect(
         nav.getByRole("link", { name: "Dashboard", exact: true }),
       ).toHaveAttribute("href", "#workspace");
+      await expect(nav.locator('a[href="#account"]')).toHaveCount(0);
+      await expect(
+        nav.getByRole("link", { name: "Account settings", exact: true }),
+      ).toHaveCount(0);
       await nav.getByRole("link", { name: "Dashboard", exact: true }).click();
     } else
       await header
@@ -133,6 +137,11 @@ for (const role of [
           .getByRole("navigation", { name: "Mobile navigation" })
           .getByRole("link", { name: "Log in", exact: true }),
       ).toBeVisible();
+      await expect(
+        page
+          .getByRole("navigation", { name: "Mobile navigation" })
+          .getByRole("link", { name: "Log in", exact: true }),
+      ).toHaveAttribute("href", "#account");
     }
   });
 }

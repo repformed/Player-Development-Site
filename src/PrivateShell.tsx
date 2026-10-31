@@ -1,4 +1,5 @@
-import { ArrowLeft, ArrowUpRight, CircleHelp, UserRound } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, CircleHelp } from "lucide-react";
+import { AccountShortcut } from "./AccountShortcut";
 import { Logo } from "./components";
 import { isStaff, ROLE_LABELS, type AccountRole } from "./roles";
 import { SocialLinks } from "./SocialLinks";
@@ -79,17 +80,6 @@ export function PrivateHeader({
           {ready && shared.role && (
             <span className="private-role">{ROLE_LABELS[shared.role]}</span>
           )}
-          {ready && staff && (
-            <a
-              href="#account"
-              aria-label="Account settings"
-              aria-current={page === "account" ? "page" : undefined}
-              className="private-account-link"
-            >
-              <UserRound size={19} />
-              <span>Account</span>
-            </a>
-          )}
           <a href="#contact" aria-label="Account help" className="private-help">
             <CircleHelp size={19} />
             <span>Help</span>
@@ -98,6 +88,7 @@ export function PrivateHeader({
             <ArrowUpRight size={16} />
             <span>Website</span>
           </a>
+          {shared.signedIn && <AccountShortcut page={page} />}
         </div>
       </div>
       {ready ? (
