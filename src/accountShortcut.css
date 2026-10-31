@@ -1,0 +1,22 @@
+.account-shortcut {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  border: 1px solid #a99261;
+  border-radius: 50%;
+  color: #f2dba6;
+  background: #25231e;
+  text-decoration: none;
+}
+.account-shortcut:hover,
+.account-shortcut[aria-current="page"] {
+  background: #413820;
+  border-color: #f2dba6;
+}
+.account-shortcut:focus-visible {
+  outline: 3px solid #f2dba6;
+  outline-offset: 3px;
+}

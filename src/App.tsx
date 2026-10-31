@@ -171,6 +171,7 @@ export default function App() {
     playerId: "",
   });
   const wasSignedIn = useRef(false);
+  const wasSignedOut = useRef(false);
   const [initial] = useState(loadState);
   const [state, setState] = useState<State>(initial.state);
   const stateSnapshot = useRef<State>(initial.state);
@@ -187,16 +188,20 @@ export default function App() {
   const sessionLock = useRef(false);
   const mainRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
+    // A restored session must keep its deep link. Only an actual sign-in from
+    // the account form should send the user to the dashboard.
+    if (!shared.loading && !shared.signedIn) wasSignedOut.current = true;
     if (
       mobile &&
       shared.signedIn &&
       !wasSignedIn.current &&
-      (page === "app" || page === "account") &&
+      (page === "app" || (page === "account" && wasSignedOut.current)) &&
       new URLSearchParams(window.location.search).get("flow") !== "recovery"
     )
       go("workspace");
     wasSignedIn.current = shared.signedIn;
-  }, [mobile, shared.signedIn, page]);
+    if (shared.signedIn) wasSignedOut.current = false;
+  }, [mobile, shared.loading, shared.signedIn, page]);
   useEffect(() => {
     const fn = () => {
       const next = safeHash(),
@@ -426,7 +431,11 @@ export default function App() {
           Skip to main content
         </a>
         {mobile ? (
-          <MobileHeader demo={demoPage} signedIn={shared.signedIn} />
+          <MobileHeader
+            demo={demoPage}
+            signedIn={shared.signedIn}
+            page={page}
+          />
         ) : privatePage ? (
           <PrivateHeader shared={shared} page={page} />
         ) : (

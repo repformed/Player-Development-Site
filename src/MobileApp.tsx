@@ -22,6 +22,7 @@ import type { SharedState } from "./useSharedContent";
 import type { PwaState } from "./pwa";
 import { SocialLinks } from "./SocialLinks";
 import { QuickHelp } from "./QuickHelp";
+import { AccountShortcut } from "./AccountShortcut";
 
 export function WebsiteLink({
   children,
@@ -58,9 +59,11 @@ export function WebsiteLink({
 export function MobileHeader({
   demo,
   signedIn,
+  page,
 }: {
   demo: boolean;
   signedIn: boolean;
+  page: string;
 }) {
   return (
     <header className="app-header">
@@ -82,6 +85,7 @@ export function MobileHeader({
         <a href="#app-help" className="app-help-shortcut" aria-label="App help">
           <CircleHelp size={21} />
         </a>
+        {signedIn && <AccountShortcut page={page} />}
       </div>
     </header>
   );

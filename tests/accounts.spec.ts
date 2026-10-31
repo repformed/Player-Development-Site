@@ -1874,3 +1874,32 @@ test("new passwords accept eight characters with all required groups and reject 
   await expect(page.getByRole("status")).toContainText("Password updated");
   expect(backend.counts.password).toBe(1);
 });
+
+test("app login reaches the dashboard while a restored settings route stays in settings", async ({
+  page,
+  context,
+}) => {
+  const f = fixture();
+  await f.install(context);
+  await page.goto("./?source=app#account");
+  await expect(
+    page.getByRole("heading", { name: "Welcome back." }),
+  ).toBeVisible();
+  await page.getByLabel("Account email").fill("fictional-parent@example.test");
+  await page
+    .getByLabel("Password", { exact: true })
+    .fill("fictional-password-only");
+  await page.getByRole("button", { name: "Sign in securely" }).click();
+  await expect(page).toHaveURL(/#workspace$/);
+  await page
+    .locator("header")
+    .getByRole("link", { name: "Account settings", exact: true })
+    .click();
+  await expect(
+    page.getByRole("heading", { name: "Account settings." }),
+  ).toBeVisible();
+  await page.reload();
+  await expect(
+    page.getByRole("heading", { name: "Account settings." }),
+  ).toBeVisible();
+});

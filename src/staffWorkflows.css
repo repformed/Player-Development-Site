@@ -257,9 +257,6 @@ button.workflow-bank-row {
   color: #e2c88f;
   border-bottom: 2px solid #c7a45c;
 }
-.private-account-link span {
-  display: inline;
-}
 @media (max-width: 760px) {
   .workflow-intro {
     display: block;
@@ -299,9 +296,6 @@ button.workflow-bank-row {
     padding-left: 20px;
     padding-right: 20px;
     gap: 16px;
-  }
-  .private-account-link span {
-    display: none;
   }
   .workflow-assignment .workout-assignment {
     padding: 20px 16px;
