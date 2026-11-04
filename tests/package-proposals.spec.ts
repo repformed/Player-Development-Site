@@ -65,6 +65,12 @@ test("four future proposals distinguish cadence, price and review terms without 
     "Feedback identifying corrections and how to improve",
   );
   await expect(elite).toContainText("three business days, not guaranteed");
+  await expect(elite).toContainText(
+    "Up to three minutes of footage per submission",
+  );
+  await expect(page.getByRole("main")).not.toContainText(
+    /group coaching|group film|film.study or coaching session/i,
+  );
   await expect(
     page.getByRole("region", { name: "Proposed delivery rhythm" }),
   ).toContainText(

@@ -20,8 +20,7 @@ const plans = [
     id: "position-development",
     name: "Position Development",
     audience: "For a focus on one selected position",
-    benefit:
-      "Add two position drills a week and monthly group film study or coaching.",
+    benefit: "Add two position drills a week for one selected position.",
   },
   {
     id: "elite-coaching",
@@ -57,6 +56,9 @@ test("essential differences are visible without expanding details and match one 
     ).toBeVisible();
   }
   await expect(page.locator(".proposal-details[open]")).toHaveCount(0);
+  await expect(page.getByRole("main")).not.toContainText(
+    /group coaching|group film|film.study or coaching session/i,
+  );
   await expect(page.getByRole("main")).not.toContainText(
     /pilot pricing|delivery.cost testing|prices.*under review/i,
   );
@@ -112,15 +114,6 @@ test("essential differences are visible without expanding details and match one 
         ],
       ],
       [
-        "Group coaching",
-        [
-          "Not included",
-          "Not included",
-          "1 film-study or coaching session / month",
-          "1 film-study or coaching session / month",
-        ],
-      ],
-      [
         "Individual corrections",
         [
           "Not included",
@@ -154,7 +147,6 @@ test("essential differences are visible without expanding details and match one 
       "2 movement sessions / week",
       "2 additional drills / week",
       "One selected position",
-      "1 film-study or coaching session / month",
       "2 corrections / athlete / month",
     ]);
   }

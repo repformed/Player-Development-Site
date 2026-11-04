@@ -1,5 +1,33 @@
 import { expect, it } from "vitest";
-import { packageInterestLink, PACKAGE_PROPOSALS } from "./packageProposals";
+import {
+  packageInterestLink,
+  PACKAGE_PROPOSALS,
+  PACKAGE_COMPARISON_ROWS,
+} from "./packageProposals";
+
+it("excludes undefined group services while preserving inherited training and Elite review terms", () => {
+  expect(JSON.stringify(PACKAGE_PROPOSALS)).not.toMatch(/group|film.study/i);
+  expect(PACKAGE_COMPARISON_ROWS.map((row) => row.key)).toEqual([
+    "iq",
+    "movement",
+    "positionDrills",
+    "position",
+    "reviews",
+  ]);
+  const position = PACKAGE_PROPOSALS[2],
+    elite = PACKAGE_PROPOSALS[3];
+  for (const offer of [position, elite]) {
+    expect(offer.comparison.iq).toBe("2 videos + 2 quizzes / week");
+    expect(offer.comparison.movement).toBe("2 movement sessions / week");
+    expect(offer.comparison.positionDrills).toBe("2 additional drills / week");
+    expect(offer.comparison.position).toBe("One selected position");
+  }
+  expect(elite.comparison.reviews).toBe("2 corrections / athlete / month");
+  expect(elite.items).toContain(
+    "Up to three minutes of footage per submission",
+  );
+  expect(elite.note).toContain("three business days, not guaranteed");
+});
 
 it("unknown package selections cannot inject recipients or email headers", () => {
   for (const value of [
