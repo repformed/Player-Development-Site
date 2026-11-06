@@ -31,9 +31,9 @@ export function Home() {
             <span className="electric-text">Own your rep.</span>
           </h1>
           <p className="hero-description">
-            Football IQ. Purposeful practice. A clearer next step. We’re
-            building a learning and training path for families and adult
-            athletes.
+            Football IQ means understanding the rules, positions, terminology,
+            reading plays and each player’s job. We’re building a path from
+            learning the game to purposeful practice for families and adult athletes.
           </p>
           <p className="home-availability">
             Prelaunch. Membership enrollment is not open; explore the plans and
@@ -322,6 +322,20 @@ export function Home() {
         </section>
       </Reveal>
 
+      <Reveal>
+        <section className="page" aria-labelledby="public-learning-title">
+          <span className="eyebrow">READ. UNDERSTAND. ASK A BETTER QUESTION.</span>
+          <h2 id="public-learning-title">Start learning before launch.</h2>
+          <p>Free text lessons, diagrams and reading checks. Explore what online
+            football learning can support, without an account or purchase.</p>
+          <div className="actions">
+            <a className="button" href="/online-football-training/">Online football training</a>
+            <a className="text-button" href="/football-iq/">Football IQ lessons</a>
+            <a className="text-button" href="/offensive-line-fundamentals/">Offensive-line fundamentals</a>
+            <a className="text-button" href="/parent-guide/">A parent’s guide</a>
+          </div>
+        </section>
+      </Reveal>
       <Reveal>
         <section className="home-finish" aria-labelledby="finish-title">
           <div className="page finish-inner">

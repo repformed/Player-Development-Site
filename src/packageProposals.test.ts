@@ -60,3 +60,18 @@ it("the approved annual savings equal twelve monthly payments minus the annual p
       p.annualSavings,
     );
 });
+
+it("explains each added benefit plainly without changing the proposed allowance or inheritance", () => {
+  const [foundation, fundamentals, position, elite] = PACKAGE_PROPOSALS;
+  for (const phrase of ["rules", "positions", "terminology", "read plays", "each player’s job"])
+    expect(foundation.benefit).toContain(phrase);
+  expect(foundation.items[0]).toBe("Two age-appropriate football-IQ videos each week, with a quiz for each lesson");
+  expect(foundation.comparison.movement).toBe("No drills");
+  expect(fundamentals.benefit).toContain("two guided movement sessions each week");
+  expect(position.benefit).toContain("two drills a week for one selected position");
+  expect(elite.benefit).toContain("two athlete-chosen drill corrections per month");
+  expect(elite.benefit).toContain("coach feedback on what to adjust next");
+  expect(fundamentals.includes).toBe("Everything proposed in Foundation, plus");
+  expect(position.includes).toBe("Everything proposed in Fundamentals, plus");
+  expect(elite.includes).toBe("Everything proposed in Position Development, plus");
+});

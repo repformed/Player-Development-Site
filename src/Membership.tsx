@@ -66,8 +66,9 @@ export function Membership({
         <Tag>FOUR LEVELS OF SUPPORT</Tag>
         <h1 tabIndex={-1}>Choose the support your athlete needs.</h1>
         <p>
-          Start with football understanding, add practice, then choose the
-          coaching support that fits.
+          Football IQ means learning and understanding football: the rules,
+          positions, terminology, reading plays and each player’s job. Start
+          there, then add practice and coaching support as needed.
         </p>
       </div>
       <section

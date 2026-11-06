@@ -715,6 +715,7 @@ export default function App() {
                 <div className="footer-group">
                   <h2>Explore</h2>
                   <a href="#home">Home</a>
+                  <a href="/online-football-training/">Football learning resources</a>
                   <a href="#membership">Proposed packages</a>
                   <a href="#staff">Meet the staff</a>
                   <a href="#demo">Fictional preview</a>

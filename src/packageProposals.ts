@@ -8,7 +8,7 @@ export const PACKAGE_PROPOSALS = [
     annual: "99",
     annualSavings: "20.88",
     audience: "For athletes learning football basics",
-    benefit: "Understand the game before adding drills.",
+    benefit: "Learn football’s rules, positions, terminology, how to read plays and each player’s job. No drills.",
     comparison: {
       iq: "2 videos + 2 quizzes / week",
       movement: "No drills",
@@ -16,12 +16,12 @@ export const PACKAGE_PROPOSALS = [
       position: "Not included",
       reviews: "Not included",
     },
-    focus: "Learn the game before the next rep.",
+    focus: "Understand football’s rules, positions and each player’s job.",
     cadence: "2 football-IQ videos + 2 lesson quizzes per week · no drills",
     includes: "Football learning, from the ground up",
     items: [
       "Two age-appropriate football-IQ videos each week, with a quiz for each lesson",
-      "Rules, terminology, field markings and positions",
+      "Rules, terminology, field markings, positions, reading plays and each player’s job",
       "Introductory offense, defense and special teams",
       "Progress checklist, achievement badges, guardian dashboard and Foundation lesson library",
     ],
@@ -33,7 +33,7 @@ export const PACKAGE_PROPOSALS = [
     annual: "199",
     annualSavings: "40.88",
     audience: "For athletes ready for guided practice",
-    benefit: "Add two fundamental movement sessions each week.",
+    benefit: "Add two guided movement sessions each week to connect football learning with practice.",
     comparison: {
       iq: "2 videos + 2 quizzes / week",
       movement: "2 movement sessions / week",
@@ -41,7 +41,7 @@ export const PACKAGE_PROPOSALS = [
       position: "Not included",
       reviews: "Not included",
     },
-    focus: "Turn understanding into purposeful practice.",
+    focus: "Connect football learning with guided movement practice.",
     cadence: "2 IQ + 2 quizzes + 2 movement sessions per week",
     includes: "Everything proposed in Foundation, plus",
     items: [
@@ -58,7 +58,7 @@ export const PACKAGE_PROPOSALS = [
     annual: "399",
     annualSavings: "80.88",
     audience: "For a focus on one selected position",
-    benefit: "Add two position drills a week for one selected position.",
+    benefit: "Add two drills a week for one selected position, focusing on that player’s skills and responsibilities.",
     comparison: {
       iq: "2 videos + 2 quizzes / week",
       movement: "2 movement sessions / week",
@@ -66,13 +66,13 @@ export const PACKAGE_PROPOSALS = [
       position: "One selected position",
       reviews: "Not included",
     },
-    focus: "Build a path around one selected position.",
+    focus: "Practice the skills and responsibilities of one selected position.",
     cadence:
       "2 IQ + 2 quizzes + 2 movement sessions + 2 position drills per week",
     includes: "Everything proposed in Fundamentals, plus",
     items: [
       "Two additional position-specific drills each week",
-      "Guided selected-position pathway, responsibilities and position IQ",
+      "Guided selected-position pathway, responsibilities and understanding that position’s role in the play",
       "Age/experience progressions, checkpoints and milestones",
     ],
     note: "The two position-specific drills are additional to the two movement sessions. Every level includes its lower-level benefits.",
@@ -85,7 +85,7 @@ export const PACKAGE_PROPOSALS = [
     annualSavings: "140.88",
     audience: "For athletes seeking personalized corrections",
     benefit:
-      "Add two athlete-chosen drill corrections per month, with next-step practice feedback.",
+      "Add two athlete-chosen drill corrections per month, with coach feedback on what to adjust next.",
     comparison: {
       iq: "2 videos + 2 quizzes / week",
       movement: "2 movement sessions / week",
@@ -93,7 +93,7 @@ export const PACKAGE_PROPOSALS = [
       position: "One selected position",
       reviews: "2 corrections / athlete / month",
     },
-    focus: "Add a closer look at the work.",
+    focus: "Get coach feedback on athlete-chosen drill footage.",
     cadence:
       "Position Development + 2 personalized drill corrections per month",
     includes: "Everything proposed in Position Development, plus",

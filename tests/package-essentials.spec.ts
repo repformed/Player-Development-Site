@@ -8,26 +8,26 @@ const plans = [
     id: "foundation",
     name: "Foundation",
     audience: "For athletes learning football basics",
-    benefit: "Understand the game before adding drills.",
+    benefit: "Learn football’s rules, positions, terminology, how to read plays and each player’s job. No drills.",
   },
   {
     id: "fundamentals",
     name: "Fundamentals",
     audience: "For athletes ready for guided practice",
-    benefit: "Add two fundamental movement sessions each week.",
+    benefit: "Add two guided movement sessions each week to connect football learning with practice.",
   },
   {
     id: "position-development",
     name: "Position Development",
     audience: "For a focus on one selected position",
-    benefit: "Add two position drills a week for one selected position.",
+    benefit: "Add two drills a week for one selected position, focusing on that player’s skills and responsibilities.",
   },
   {
     id: "elite-coaching",
     name: "Elite Coaching",
     audience: "For athletes seeking personalized corrections",
     benefit:
-      "Add two athlete-chosen drill corrections per month, with next-step practice feedback.",
+      "Add two athlete-chosen drill corrections per month, with coach feedback on what to adjust next.",
   },
 ];
 
@@ -265,4 +265,16 @@ test("short stacked summaries and comparison reflow without clipping or page ove
     path: `artifacts/package-essentials/packages-${info.project.name}.png`,
     fullPage: true,
   });
+});
+
+test("parents can understand football IQ and each added benefit before opening details", async ({ page }) => {
+  await page.goto("./#membership");
+  await expect(page.locator(".page-intro")).toContainText("Football IQ means learning and understanding football");
+  await expect(page.locator(".page-intro")).toContainText("rules, positions, terminology, reading plays and each player’s job");
+  for (const p of plans) {
+    const card = page.getByRole("article", { name: p.name, exact: true });
+    await expect(card.locator(".proposal-benefit")).toHaveText(p.benefit);
+    expect(await card.locator(".proposal-benefit").evaluate(node => node.closest("details") === null)).toBe(true);
+  }
+  await expect(page.getByRole("region", { name: "Current availability" })).toContainText("Enrollment is not");
 });
