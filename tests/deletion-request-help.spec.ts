@@ -27,12 +27,15 @@ test("deletion review is available without JavaScript or login and prepares only
 test("request help is keyboard reachable, accessible on phones, and returns to account recovery", async ({ page }, info) => {
   await page.goto("./account-help.html");
   await page.getByRole("link", { name:"Request deletion help", exact:true }).click();
-  await expect(page).toHaveURL(/#request-deletion$/);
+  await expect(page).toHaveURL(/\/account-help(?:\.html)?#request-deletion$/);
+  const deletionHelpUrl = page.url();
   await page.setViewportSize({width:info.project.name==="phone"?320:1000,height:900});
   await page.addStyleTag({content:"body{font-size:125%}"});
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
   expect((await new AxeBuilder({page}).include("#request-deletion").withTags(["wcag2a","wcag2aa","wcag21aa"]).analyze()).violations).toEqual([]);
   const draft=page.getByRole("link",{name:"Prepare account-deletion request email"});await draft.focus();await expect(draft).toBeFocused();
   await page.getByRole("link",{name:"Try account recovery"}).click();await expect(page).toHaveURL(/#account$/);
-  await page.goBack();await expect(page).toHaveURL(/account-help.html#request-deletion$/);
+  await page.goBack();
+  await expect(page).toHaveURL(deletionHelpUrl);
+  await expect(page.locator("#request-deletion").getByRole("heading")).toHaveText("Cannot sign in? Request deletion help.");
 });
