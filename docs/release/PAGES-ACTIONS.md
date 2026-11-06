@@ -1,6 +1,6 @@
 # Repformed Pages release preparation
 
-This workflow is prepared locally, not installed or executed on GitHub. It targets only account `7d7af2c3863a2d09d830f52bd459d5ba`, existing Pages project `repformed`, production branch `main`, and public source `4e71045c6e6928442819e184228d9eb48b64ae0a` descended from `5e86084e30c871c3ae79c1f4d3000f9c6dfadb16`. It does not include the private launch branch. Initial independently reported production deployment is `c330a2cc-6c09-4494-a35d-fc362b639ef0`; verify it again before use.
+The initial workflow was installed on GitHub at 6aed246; its first preview run stopped on validation before upload. This correction is prepared for the next acceptance run. It targets only account `7d7af2c3863a2d09d830f52bd459d5ba`, existing Pages project `repformed`, production branch `main`, and public source `bb5078c1c9b07aa0075462e9ca924e541aa9f85d` descended from `5e86084e30c871c3ae79c1f4d3000f9c6dfadb16`. It does not include the private launch branch. Initial independently reported production deployment is `c330a2cc-6c09-4494-a35d-fc362b639ef0`; verify it again before use.
 
 ## Prerequisites and installation boundary
 
@@ -27,3 +27,7 @@ Project/domain/production-baseline checks occur before upload and immediately be
 Local controller tests, manifest checks, YAML inspection, lint and typecheck do not prove GitHub runner execution, token permissions or Cloudflare upload acceptance. These remain pending authorized setup and an actual preview run. No production, private product activation, real account/data, app-store or device acceptance follows from this work.
 
 Reference: https://developers.cloudflare.com/pages/how-to/use-direct-upload-with-continuous-integration/
+
+## First Actions acceptance correction
+
+Initial preview run 42286535990 stopped before upload: 383 unit cases and 526 browser cases passed; 14 browser cases failed. Generated guide/policy routes were served through the development-server fallback, and the startup test still expected the previous heading. The candidate now tests a fresh compiled server on a strict localhost port without server reuse and asserts the approved current fallback heading. No application/static asset source changed; the existing approved artifact manifest remains enforced. No cases were skipped, retries enabled or assertions relaxed. The new source descends from the original 4e71045 candidate and its reviewed controller. A new successful full preview is still required.
