@@ -1,3 +1,4 @@
+import { LearningExample } from "./LearningExample";
 import { useMemo, useState } from "react";
 import { z } from "zod";
 import { PROFILES } from "./model";
@@ -204,11 +205,21 @@ export function FamilyDemo({ app = false }: { app?: boolean }) {
         <Tag>FOOTBALL DEMO · SAMPLE DATA</Tag>
         <h1 tabIndex={-1}>Explore fictional practice.</h1>
         <p>
-          Try sample family controls and guided practice without an account.
-          This preview does not include the proposed video lessons or quizzes.
+          Try a text-only lesson, a sample question and an example weekly
+          learning pattern, then explore fictional family controls and guided
+          practice.
         </p>
       </div>
-      <p className="eyebrow" id="demo-setup-label">
+      <LearningExample
+        onPractice={() =>
+          requestAnimationFrame(() => {
+            const target = document.getElementById("demo-setup-label");
+            target?.scrollIntoView({ block: "start", behavior: "auto" });
+            target?.focus();
+          })
+        }
+      />
+      <p className="eyebrow" id="demo-setup-label" tabIndex={-1}>
         Who are you setting up training for?
       </p>
       <div

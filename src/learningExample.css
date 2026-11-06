@@ -1,0 +1,87 @@
+.learning-example {
+  margin: 1.5rem 0;
+  padding: clamp(1rem, 3vw, 1.75rem);
+  border: 1px solid rgba(202, 171, 93, 0.5);
+  border-radius: 12px;
+  background: #20201c;
+  color: #eeeae1;
+}
+.learning-example h2,
+.learning-example h3 {
+  color: #fff9ed;
+}
+.learning-example h3:focus {
+  outline: 2px solid #d4b16a;
+  outline-offset: 5px;
+}
+.learning-example-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  list-style: none;
+  margin: 1.25rem 0;
+  padding: 0;
+}
+.learning-example-steps li {
+  padding: 0.75rem;
+  border: 1px solid #666254;
+  border-radius: 8px;
+}
+.learning-example-steps li[aria-current="step"] {
+  border-color: #e0bb6b;
+  background: #333024;
+}
+.learning-example-steps span {
+  display: block;
+  color: #e5c47c;
+  font-weight: 700;
+}
+.learning-example-panel {
+  padding: 1rem 0;
+}
+.learning-example fieldset {
+  border: 0;
+  margin: 1rem 0;
+  padding: 0;
+  min-width: 0;
+}
+.learning-example legend {
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+.learning-example-answer {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 48px;
+  padding: 0.8rem;
+  margin: 0.6rem 0;
+  border: 1px solid #858071;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.learning-example-answer:has(input:checked) {
+  border-color: #e0bb6b;
+  background: #333024;
+}
+.learning-example-answer input {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+  accent-color: #d4b16a;
+}
+.learning-example-note {
+  color: #c9c5bb;
+}
+.learning-example .actions {
+  flex-wrap: wrap;
+}
+@media (max-width: 600px) {
+  .learning-example-steps {
+    grid-template-columns: 1fr;
+  }
+  .learning-example .button {
+    max-width: 100%;
+    white-space: normal;
+  }
+}

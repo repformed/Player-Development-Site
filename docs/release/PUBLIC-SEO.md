@@ -1,0 +1,9 @@
+# Public SEO preparation — not deployed
+
+Based on verified public source 5e86084 plus the independently reviewed learning preview. Canonical, Open Graph URL/title and prelaunch description identify https://repformed.com/. The sitemap lists only that genuine homepage; hash navigation sections are not independent documents. robots.txt permits crawling and points to the sitemap. Neither robots.txt nor noindex grants or restricts account access.
+
+Initial HTML includes accurate public introductory text, prelaunch availability and the proposed learning journey without JavaScript. React's existing createRoot replaces this static fallback once ready. This is a deliberately limited static public summary, not full component prerendering, SSR or hydration. No account/member content is rendered into HTML; original public content-config and all service gates remain unchanged. No fabricated testimonials, structured-data offers, enrollment, purchase or delivery claims were added.
+
+Client metadata uses a strict public root/section allowlist. Queries, non-root paths, samples and account/staff/workspace hashes are noindex/nofollow after JavaScript starts; an existing initial noindex is never relaxed. URL fragments are not sent to servers: initial root HTML cannot distinguish #account from #home. This is a search hint, not a security control or a claim of server-level exclusion for account hashes. Existing private preview HTML/header exclusions and interest-privacy noindex remain unchanged.
+
+Search Console ownership/verification, sitemap submission, DNS/HTTP header verification, current Cloudflare domain-served identity and actual Google indexing/rankings are not established by these source changes. Prior GET https://repformed.com/ from this executor returned HTTP403; it has not been retried. No DNS, account, hosted, authorization or deployment changes were performed.

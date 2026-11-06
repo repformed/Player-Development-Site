@@ -1,0 +1,11 @@
+# Public learning example — prepared, not deployed
+
+The existing public `#demo` now offers a text lesson → sample question → proposed weekly pattern before the existing family/practice controls. Black/gold styling, the original demo entry and all existing account/role/enrollment gates remain unchanged. `src/App.tsx`, backend SQL, provider settings and public account configuration were not edited. No site or app publication is authorized by this source change.
+
+`LearningExample.tsx` is a public illustration only. The short diagram-key passage is explicitly pending coach review, not approved curriculum or physical instruction. It supplies no training video, fake player, real score, learner progress, account, checkout, enrollment or scheduled release. Foundation remains two proposed IQ video lessons/two lesson quizzes weekly with no drills; the optional practice handoff is explicitly for drill-including plans. The second lesson is labeled an unavailable planned slot, not supplied content.
+
+Answers and step state exist only in component memory. Wrong answers show explanatory sample feedback; a correct answer enables the weekly-pattern view. Backtracking allows revision, close clears state, refresh/leaving resets the illustration, and the handoff focuses existing fictional practice controls. No new local-storage key, server call, member record, permission, reminder or purchase is created. Existing fictional practice storage remains separate and unchanged.
+
+The source correction is portable to the interest-site release as FamilyDemo.tsx, LearningExample.tsx and learningExample.css plus regression coverage. Do not deploy the entire private launch branch as an interest-site correction; it contains unrelated prepared private launch work. Preserve the current prelaunch/pilot configuration and existing public release process.
+
+Verification includes the full unit/SQL aggregate, focused wrong/correct/repeat/back/close/refresh/navigation checks, keyboard and narrow/enlarged layouts, sample-section WCAG checks, and full historical/compiled browser runs on the final candidate. Screenshots and exact results are in the local handoff receipt. Prior-source suite counts are not relabeled. The sample is not membership/content/provider/device acceptance. Future real IQ video lessons and approved curriculum remain absent.

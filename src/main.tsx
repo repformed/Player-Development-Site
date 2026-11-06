@@ -1,3 +1,4 @@
+import { installSearchMetadata } from "./searchMetadata";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
@@ -11,6 +12,7 @@ import "./editorial.css";
 import "./mobile.css";
 import "./repformed.css";
 import "./homeJourney.css";
+installSearchMetadata();
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <App />
