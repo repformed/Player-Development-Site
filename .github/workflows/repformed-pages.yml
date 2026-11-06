@@ -1,0 +1,185 @@
+name: Repformed Pages release
+on:
+  workflow_dispatch:
+    inputs:
+      stage:
+        type: choice
+        options: [preview, promote]
+        default: preview
+        required: true
+      confirm_source_sha:
+        description: Exact public source SHA (initial candidate 4e71045c6e6928442819e184228d9eb48b64ae0a)
+        type: string
+        required: true
+      expected_production_id:
+        description: Independently verified current production deployment ID
+        type: string
+        default: c330a2cc-6c09-4494-a35d-fc362b639ef0
+        required: true
+      preview_run_id:
+        description: Successful preview run ID, required for promotion
+        type: string
+      confirm_manifest_digest:
+        description: Full manifest digest from preview receipt, required for promotion
+        type: string
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: repformed-pages-release
+  cancel-in-progress: false
+jobs:
+  build:
+    if: github.repository == 'repformed/Player-Development-Site' && github.ref == 'refs/heads/main' && inputs.stage == 'preview'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          path: control
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24.19.0
+      - name: Test trusted deployment controller without credentials
+        run: node --test control/scripts/tests/pages-release.test.mjs
+      - name: Validate explicit source selection
+        env:
+          CONFIRMED: ${{ inputs.confirm_source_sha }}
+        working-directory: control
+        run: node -e 'const t=require("./.github/pages-release/target.json"); if(process.env.CONFIRMED!==t.sourceSha) process.exit(1)'
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          repository: repformed/Player-Development-Site
+          ref: ${{ inputs.confirm_source_sha }}
+          fetch-depth: 0
+          path: source
+          persist-credentials: false
+      - name: Check actual source identity and public ancestry
+        env:
+          CONFIRMED: ${{ inputs.confirm_source_sha }}
+        working-directory: source
+        run: |
+          test "$(git rev-parse HEAD)" = "$CONFIRMED"
+          git merge-base --is-ancestor 5e86084e30c871c3ae79c1f4d3000f9c6dfadb16 HEAD
+      - name: Install and validate without deployment credentials
+        working-directory: source
+        run: |
+          npm ci
+          npm run lint
+          npm run typecheck
+          npm test
+          npm run build
+          npx playwright install --with-deps chromium
+          npm run test:e2e
+          npm run test:app
+      - name: Package verified bytes (never rebuild during promotion)
+        run: |
+          mkdir -p candidate
+          cp -a source/dist candidate/site
+          node control/scripts/pages-release.mjs verify candidate/site candidate/build.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: repformed-public-candidate
+          path: candidate/
+          retention-days: 7
+          if-no-files-found: error
+  preview:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      url: ${{ steps.deploy.outputs.url }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          path: control
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24.19.0
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: repformed-public-candidate
+          path: candidate
+      - name: Install pinned existing Pages CLI without credentials
+        run: npm ci --ignore-scripts --no-audit --no-fund --prefix control/.github/pages-release/tools
+      - name: Verify target and upload public preview
+        id: deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.REPFORMED_PAGES_API_TOKEN }}
+          CONFIRM_SOURCE_SHA: ${{ inputs.confirm_source_sha }}
+          EXPECTED_PRODUCTION_ID: ${{ inputs.expected_production_id }}
+          PAGES_CLI: ${{ github.workspace }}/control/.github/pages-release/tools
+        run: node control/scripts/pages-release.mjs preview candidate/site proof/preview.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: repformed-preview-proof
+          path: proof/preview.json
+          retention-days: 7
+          if-no-files-found: error
+  verify_preview:
+    needs: preview
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ inputs.confirm_source_sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24.19.0
+      - name: Verify deployed preview with fictional intercepted backend only
+        env:
+          DEMO_BASE_URL: ${{ needs.preview.outputs.url }}
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+          npx playwright test tests/search-metadata.spec.ts tests/deletion-request-help.spec.ts tests/service-policies.spec.ts
+  promote:
+    if: github.repository == 'repformed/Player-Development-Site' && github.ref == 'refs/heads/main' && inputs.stage == 'promote'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          path: control
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24.19.0
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: repformed-public-candidate
+          run-id: ${{ inputs.preview_run_id }}
+          github-token: ${{ github.token }}
+          path: candidate
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: repformed-preview-proof
+          run-id: ${{ inputs.preview_run_id }}
+          github-token: ${{ github.token }}
+          path: proof
+      - name: Install pinned existing Pages CLI without credentials
+        run: npm ci --ignore-scripts --no-audit --no-fund --prefix control/.github/pages-release/tools
+      - name: Promote exact successful preview bytes after explicit confirmation
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.REPFORMED_PAGES_API_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
+          CONFIRM_SOURCE_SHA: ${{ inputs.confirm_source_sha }}
+          EXPECTED_PRODUCTION_ID: ${{ inputs.expected_production_id }}
+          PREVIEW_RUN_ID: ${{ inputs.preview_run_id }}
+          CONFIRM_MANIFEST_DIGEST: ${{ inputs.confirm_manifest_digest }}
+          PREVIEW_PROOF: ${{ github.workspace }}/proof/preview.json
+          PAGES_CLI: ${{ github.workspace }}/control/.github/pages-release/tools
+        run: node control/scripts/pages-release.mjs promote candidate/site proof/production.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: repformed-production-proof
+          path: proof/production.json
+          retention-days: 30
+          if-no-files-found: error
