@@ -8,7 +8,7 @@ on:
         default: preview
         required: true
       confirm_source_sha:
-        description: Exact public source SHA (public candidate 28931cda7787dacc97e21a8117985d813a6bd429)
+        description: Exact public source SHA (public candidate 3a08dab3cc03038a1e50424c6bbe05b63ebf2210)
         type: string
         required: true
       expected_production_id:

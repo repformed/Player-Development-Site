@@ -1,6 +1,6 @@
 # Repformed Pages release preparation
 
-The initial workflow was installed on GitHub at 6aed246; its first preview run stopped on validation before upload. This correction is prepared for the next acceptance run. It targets only account `7d7af2c3863a2d09d830f52bd459d5ba`, existing Pages project `repformed`, production branch `main`, and public source `28931cda7787dacc97e21a8117985d813a6bd429` descended from `5e86084e30c871c3ae79c1f4d3000f9c6dfadb16`. It does not include the private launch branch. Initial independently reported production deployment is `c330a2cc-6c09-4494-a35d-fc362b639ef0`; verify it again before use.
+The initial workflow was installed on GitHub at 6aed246; its first preview run stopped on validation before upload. This correction is prepared for the next acceptance run. It targets only account `7d7af2c3863a2d09d830f52bd459d5ba`, existing Pages project `repformed`, production branch `main`, and public source `3a08dab3cc03038a1e50424c6bbe05b63ebf2210` descended from `5e86084e30c871c3ae79c1f4d3000f9c6dfadb16`. It does not include the private launch branch. Initial independently reported production deployment is `c330a2cc-6c09-4494-a35d-fc362b639ef0`; verify it again before use.
 
 ## Prerequisites and installation boundary
 
@@ -35,3 +35,7 @@ Initial preview run 42286535990 stopped before upload: 383 unit cases and 526 br
 ## Deterministic review fixture clock
 
 Second preview run 42292267312 stopped before upload with 539 browser cases passing and one failing: the fictional review fixture read the wall clock separately for ready and due timestamps, yielding 48 hours plus one millisecond. Actual SQL already derives due from the same ready timestamp. The fixture now captures one injected clock reading; regression assertions retain the exact 48-hour difference and check immutable timestamps after completed reload. All 48 affected fixture-consumer browser cases, 20 SQL/unit cases, lint and typecheck passed locally; independent review found no remaining concrete issue. No application asset or business-policy source changed. A new complete preview is required; the failed run is not acceptance.
+
+## Canonical account-help route acceptance
+
+Preview run 42295078207 completed the build and public preview upload, but two of 16 hosted checks expected the .html URL after browser Back. Cloudflare canonicalizes that page to the extensionless path. The test now accepts only the intended page forms, captures the server-selected URL, and requires exact return to that URL plus the deletion-help heading. Content, keyboard, accessibility, recovery and mailto checks remain. Four ordinary local checks and all 16 checks against a local canonicalizing server passed. Direct executor requests to the hosted preview failed certificate validation before assertions; certificate checks were not disabled or retried. Independent review approved the test correction. Hosted acceptance remains pending a successful new GitHub preview run; no production promotion follows from the local result.
