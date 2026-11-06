@@ -14,7 +14,7 @@ test("blocked main entry retains useful contact and retry without claiming submi
     (route) => (blockEntry ? route.abort() : route.continue()),
   );
   await page.goto("./");
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Repformed");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Repformed — Football learning & training");
   await expect(
     page.getByRole("link", { name: "reload the website" }),
   ).toHaveAttribute("href", "./");
