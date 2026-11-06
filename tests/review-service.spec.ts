@@ -68,7 +68,12 @@ test("record, preview and send creates one tracked submission with a 48-hour tar
   page,
   context,
 }) => {
-  const backend = await fixture(context, "athlete", false, 1, true);
+  const ready = Date.parse("2026-11-06T12:00:00.999Z");
+  let clockReads = 0;
+  const backend = await fixture(
+    context, "athlete", false, 1, true, userId,
+    () => ready + clockReads++,
+  );
   await page.goto("./?source=app#workspace");
   await page.getByRole("button", { name: "Send a drill video" }).click();
   const d = page.getByRole("dialog");
@@ -83,11 +88,18 @@ test("record, preview and send creates one tracked submission with a 48-hour tar
   ).toBeVisible();
   expect(backend.services).toHaveLength(1);
   const row = backend.services[0];
+  const readyAt = row.ready_at, dueAt = row.due_at;
+  expect(clockReads).toBe(1);
+  expect(row.ready_at).toBe(new Date(ready).toISOString());
   expect(Date.parse(row.due_at!) - Date.parse(row.ready_at!)).toBe(
     48 * 3600000,
   );
   await page.reload();
+  await expect(page.getByText("Feedback target:", { exact: false })).toBeVisible();
   expect(backend.services).toHaveLength(1);
+  expect(clockReads).toBe(1);
+  expect(backend.services[0].ready_at).toBe(readyAt);
+  expect(backend.services[0].due_at).toBe(dueAt);
 });
 test("Owner and Manager service desk tracks deadlines, filters, assignments, cancelled edits and refresh", async ({
   page,

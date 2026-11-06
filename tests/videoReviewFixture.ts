@@ -58,6 +58,7 @@ export async function fixture(
   drillCount = 1,
   tracking = false,
   actorId = userId,
+  reviewClock: () => number = Date.now,
 ) {
   const paused = practiceResumeFixture();
   const rows: Review[] = [];
@@ -105,8 +106,9 @@ export async function fixture(
         s.drill_title = row.drill_title;
       }
       if (["queued", "reviewed"].includes(row.status) && !s.ready_at) {
-        s.ready_at = new Date().toISOString();
-        s.due_at = new Date(Date.now() + 48 * 3600000).toISOString();
+        const ready = reviewClock();
+        s.ready_at = new Date(ready).toISOString();
+        s.due_at = new Date(ready + 48 * 3600000).toISOString();
       }
       if (row.status === "reviewed") {
         s.state = "delivered";
