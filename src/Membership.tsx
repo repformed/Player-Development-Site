@@ -84,6 +84,7 @@ export function Membership({
           All prices are in USD per athlete. Choose a plan to tell us what
           interests you—no account or payment needed.
         </p>
+        <p><a href="/service-policies/">Read the planned cancellation, refund, review and retention policies</a>.</p>
         <button className="text-button" onClick={focusInterest}>
           Share your interest <ArrowRight size={17} />
         </button>

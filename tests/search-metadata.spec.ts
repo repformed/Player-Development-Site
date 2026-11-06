@@ -13,7 +13,7 @@ test("compiled homepage supplies crawlable prelaunch copy and consistent search 
     const robots = await (await page.request.get(baseURL! + "/robots.txt")).text();
     expect(robots).toContain("Sitemap: https://repformed.com/sitemap.xml");
     const sitemap = await (await page.request.get(baseURL! + "/sitemap.xml")).text();
-    expect([...sitemap.matchAll(/<loc>(.*?)<\/loc>/g)].map(x => x[1])).toEqual(["https://repformed.com/", "https://repformed.com/online-football-training/", "https://repformed.com/football-iq/", "https://repformed.com/offensive-line-fundamentals/", "https://repformed.com/parent-guide/"]);
+    expect([...sitemap.matchAll(/<loc>(.*?)<\/loc>/g)].map(x => x[1])).toEqual(["https://repformed.com/", "https://repformed.com/online-football-training/", "https://repformed.com/football-iq/", "https://repformed.com/offensive-line-fundamentals/", "https://repformed.com/parent-guide/", "https://repformed.com/service-policies/"]);
     expect(sitemap).not.toMatch(/account|workspace|preview|#/);
   } finally { await context.close(); }
 });

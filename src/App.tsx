@@ -723,6 +723,7 @@ export default function App() {
                 <div className="footer-group">
                   <h2>Help & access</h2>
                   <a href="#customer-help">Customer help</a>
+                  <a href="/service-policies/">Proposed service policies</a>
                   <a href="#contact">Contact</a>
                   <QuickHelp />
                   <a href={shared.signedIn ? "#workspace" : "#account"}>
