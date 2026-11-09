@@ -9,7 +9,7 @@ concurrency:
   group: repformed-pages-release
   cancel-in-progress: false
 env:
-  PUBLIC_CONTROL_SHA: "0000000000000000000000000000000000000000"
+  PUBLIC_CONTROL_SHA: "490c4a801e2fe62d859a1d2ab7aab6e635173554"
   PUBLIC_AUTO_SOURCE_SHA: ${{ github.sha }}
 jobs:
   build:
