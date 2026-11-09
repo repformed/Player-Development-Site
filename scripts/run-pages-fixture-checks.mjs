@@ -30,6 +30,20 @@ const target = JSON.parse(
   await readFile(resolve(control, ".github/pages-release/target.json")),
 );
 const env = { ...process.env };
+const automatic = !!env.PUBLIC_AUTO_SOURCE_SHA;
+if (automatic) {
+  if (
+    env.GITHUB_EVENT_NAME !== "push" ||
+    env.GITHUB_REF !== "refs/heads/main" ||
+    env.GITHUB_REPOSITORY !== target.repository ||
+    env.GITHUB_WORKFLOW !== "Repformed automatic public release" ||
+    env.PUBLIC_AUTO_SOURCE_SHA !== env.GITHUB_SHA ||
+    !/^[a-f0-9]{40}$/.test(env.PUBLIC_CONTROL_SHA || "")
+  )
+    throw Error("Trusted automatic fixture context required");
+  target.sourceSha = env.PUBLIC_AUTO_SOURCE_SHA;
+}
+const expectedControl = automatic ? env.PUBLIC_CONTROL_SHA : env.GITHUB_SHA;
 let permittedHost = "";
 if (mode === "hosted") {
   if (!previewArg) throw Error("Verified preview receipt required");
@@ -38,7 +52,7 @@ if (mode === "hosted") {
   if (
     receipt.phase !== "preview" ||
     receipt.sourceSha !== target.sourceSha ||
-    receipt.controlSha !== env.GITHUB_SHA ||
+    receipt.controlSha !== expectedControl ||
     receipt.runId !== env.GITHUB_RUN_ID ||
     receipt.baseline !== env.EXPECTED_PRODUCTION_ID ||
     !/^[a-f0-9-]{36}$/.test(receipt.deploymentId || "")
@@ -149,6 +163,16 @@ try {
     const receipt = {
       ...result,
       suite: mode,
+      runId: env.GITHUB_RUN_ID,
+      attempt: env.GITHUB_RUN_ATTEMPT
+        ? Number(env.GITHUB_RUN_ATTEMPT)
+        : undefined,
+      controlSha: expectedControl,
+      workflowSha: env.GITHUB_SHA,
+      sourceTree: execFileSync("git", ["rev-parse", "HEAD^{tree}"], {
+        cwd: source,
+        encoding: "utf8",
+      }).trim(),
       sourceSha: actualHead,
       cases: cases.length,
       passed: cases.length,

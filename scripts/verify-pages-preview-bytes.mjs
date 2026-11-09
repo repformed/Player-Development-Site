@@ -18,11 +18,26 @@ export async function verifyPreviewBytes(
   fetcher = globalThis.fetch,
   fixtures = {},
 ) {
-  dispatchGuard(env);
+  return verifyBoundPreviewBytes(build, preview, env, fetcher, {
+    ...fixtures,
+    sourceSha: target.sourceSha,
+    controlSha: env.GITHUB_SHA,
+    guard: dispatchGuard,
+  });
+}
+// Programmatic trusted-controller boundary; no CLI accepts authority overrides.
+export async function verifyBoundPreviewBytes(
+  build,
+  preview,
+  env,
+  fetcher,
+  fixtures,
+) {
+  fixtures.guard(env);
   must(
-    build.sourceSha === target.sourceSha &&
-      preview.sourceSha === target.sourceSha &&
-      preview.controlSha === env.GITHUB_SHA &&
+    build.sourceSha === fixtures.sourceSha &&
+      preview.sourceSha === fixtures.sourceSha &&
+      preview.controlSha === fixtures.controlSha &&
       preview.runId === env.GITHUB_RUN_ID &&
       preview.phase === "preview" &&
       preview.baseline === env.EXPECTED_PRODUCTION_ID &&
@@ -184,8 +199,8 @@ export async function verifyPreviewBytes(
     receipt: {
       phase: "verified-preview",
       runId: env.GITHUB_RUN_ID,
-      controlSha: env.GITHUB_SHA,
-      sourceSha: target.sourceSha,
+      controlSha: fixtures.controlSha,
+      sourceSha: fixtures.sourceSha,
       deploymentId: preview.deploymentId,
       url: origin.origin,
       manifestDigest: build.manifestDigest,

@@ -578,3 +578,34 @@
     align-items: baseline;
   }
 }
+
+/* Keep public package navigation and prices readable with enlarged text. */
+.experience:has(.proposed-memberships) .header-inner {
+  height: auto;
+  min-height: 80px;
+  flex-wrap: wrap;
+  padding-block: 12px;
+}
+.experience:has(.proposed-memberships) .header-actions {
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+.experience:has(.proposed-memberships) .header-account {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+.experience:has(.proposed-memberships) .desktop-nav { flex-wrap: wrap; }
+.proposed-package .proposal-identity > * { min-width: 0; overflow-wrap: anywhere; }
+@media (min-width: 361px) and (max-width: 760px) {
+  .experience .proposal-identity {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 8em), 1fr));
+  }
+}
+.experience .package-interest > *,
+.experience .interest-form fieldset { min-width: 0; }
+.experience .interest-form input:not([type="checkbox"]),
+.experience .interest-form select { min-width: 0; max-width: 100%; }
+.experience .proposed-memberships { overflow-wrap: anywhere; }
+.experience .interest-form fieldset,
+.experience .interest-form label { grid-template-columns: minmax(0, 1fr); }

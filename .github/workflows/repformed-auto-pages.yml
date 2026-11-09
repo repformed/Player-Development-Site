@@ -1,0 +1,193 @@
+name: Repformed automatic public release
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: repformed-pages-release
+  cancel-in-progress: false
+env:
+  PUBLIC_CONTROL_SHA: "0000000000000000000000000000000000000000"
+  PUBLIC_AUTO_SOURCE_SHA: ${{ github.sha }}
+jobs:
+  build:
+    name: Validate exact public source
+    if: github.repository == 'repformed/Player-Development-Site' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ env.PUBLIC_CONTROL_SHA }}
+          path: control
+          persist-credentials: false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          path: source
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24.19.0
+      - name: Reject source outside reviewed public scope before installation
+        run: node control/scripts/pages-auto-release.mjs precheck source
+      - name: Install and validate without provider credentials
+        working-directory: source
+        run: |
+          npm ci
+          ln -s ../source/node_modules ../control/node_modules
+          node ../control/scripts/pages-auto-release.mjs scope . artifacts/public-scope.json
+          npm run lint
+          npm run typecheck
+          npm test
+          npm run build
+          PUBLIC_TEST_SITE="$PWD/dist" node --test ../control/scripts/tests/pages-release.test.mjs ../control/scripts/tests/pages-preview-bytes.test.mjs ../control/scripts/tests/pages-auto-release.test.mjs
+          npx playwright install --with-deps chromium
+          node ../control/scripts/run-pages-fixture-checks.mjs . e2e artifacts/fixture-e2e.json
+          node ../control/scripts/run-pages-fixture-checks.mjs . app artifacts/fixture-app.json
+      - name: Bind validated source to new static artifact manifest
+        run: |
+          mkdir -p candidate
+          node control/scripts/pages-auto-release.mjs manifest source candidate/build.json
+          cp -a source/dist candidate/site
+          cp source/artifacts/public-scope.json candidate/
+          cp source/artifacts/fixture-* candidate/
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: repformed-auto-candidate
+          path: candidate/
+          retention-days: 7
+          if-no-files-found: error
+  preview:
+    name: Preview exact public artifact
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      url: ${{ steps.preview.outputs.url }}
+      ready: ${{ steps.preview.outputs.ready }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ env.PUBLIC_CONTROL_SHA }}
+          path: control
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24.19.0
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: repformed-auto-candidate
+          path: candidate
+      - name: Install existing pinned Pages CLI without provider credentials
+        run: npm ci --ignore-scripts --no-audit --no-fund --prefix control/.github/pages-release/tools
+      - name: Validate downloaded artifact before provider credentials
+        run: node control/scripts/pages-auto-release.mjs prepare candidate/build.json candidate/site
+      - name: Capture fresh baseline and upload verified public preview
+        id: preview
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.REPFORMED_PAGES_API_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
+          PAGES_CLI: ${{ github.workspace }}/control/.github/pages-release/tools
+        run: node control/scripts/pages-auto-release.mjs preview candidate/build.json candidate/site proof/preview.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: repformed-auto-preview-proof
+          path: proof/
+          retention-days: 7
+          if-no-files-found: warn
+  verify_preview:
+    name: Verify exact hosted public artifact
+    needs: [build, preview]
+    if: needs.preview.outputs.ready == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ env.PUBLIC_CONTROL_SHA }}
+          path: control
+          persist-credentials: false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.sha }}
+          path: source
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24.19.0
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: repformed-auto-candidate
+          path: candidate
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: repformed-auto-preview-proof
+          path: proof
+      - name: Install browser tools without provider credentials
+        working-directory: source
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+      - name: Verify all served bytes and effective configured headers
+        env:
+          DEMO_BASE_URL: ${{ needs.preview.outputs.url }}
+        run: node control/scripts/pages-auto-release.mjs hosted candidate/build.json proof/preview.json proof/verified-preview.json
+      - name: Verify public interactions with contained fictional backend
+        working-directory: source
+        env:
+          DEMO_BASE_URL: ${{ needs.preview.outputs.url }}
+        run: |
+          export EXPECTED_PRODUCTION_ID="$(node -p 'require("../proof/preview.json").baseline')"
+          node ../control/scripts/run-pages-fixture-checks.mjs . hosted ../proof/fixture-hosted.json ../proof/preview.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: repformed-auto-hosted-acceptance
+          path: proof/
+          retention-days: 7
+          if-no-files-found: warn
+  promote:
+    name: Promote exact public artifact
+    needs: [build, preview, verify_preview]
+    if: needs.preview.outputs.ready == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ env.PUBLIC_CONTROL_SHA }}
+          path: control
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24.19.0
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: repformed-auto-candidate
+          path: candidate
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: repformed-auto-hosted-acceptance
+          path: proof
+      - name: Install existing pinned Pages CLI without provider credentials
+        run: npm ci --ignore-scripts --no-audit --no-fund --prefix control/.github/pages-release/tools
+      - name: Validate downloaded artifact before provider credentials
+        run: node control/scripts/pages-auto-release.mjs prepare candidate/build.json candidate/site
+      - name: Promote only exact successful preview bytes
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.REPFORMED_PAGES_API_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
+          PAGES_CLI: ${{ github.workspace }}/control/.github/pages-release/tools
+        run: node control/scripts/pages-auto-release.mjs promote candidate/build.json candidate/site proof/production.json proof/preview.json proof/verified-preview.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: repformed-auto-production-proof
+          path: proof/
+          retention-days: 30
+          if-no-files-found: warn
