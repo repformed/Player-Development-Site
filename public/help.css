@@ -152,3 +152,9 @@
 .help-document .intro {
   color: var(--muted);
 }
+
+/* Email addresses remain readable without horizontal page scrolling. */
+.help-document a[href^="mailto:"] { overflow-wrap: anywhere; }
+.help-document .help-footer > * { min-width: 0; max-width: 100%; }
+.help-document main { overflow-wrap: anywhere; }
+.help-document .brand > span { min-width: 0; overflow-wrap: anywhere; }

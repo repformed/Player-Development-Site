@@ -50,11 +50,13 @@ export function Home() {
           <div className="hero-how-link">
             <button
               className="text-button"
-              onClick={() =>
-                document.getElementById("how-it-works")?.scrollIntoView({
+              onClick={() => {
+                const target = document.getElementById("how-it-works");
+                target?.focus({ preventScroll: true });
+                target?.scrollIntoView({
                   behavior: enabled ? "smooth" : "auto",
-                })
-              }
+                });
+              }}
             >
               See how it works <ArrowDown size={17} />
             </button>
@@ -228,10 +230,15 @@ export function Home() {
       </Reveal>
 
       <Reveal className="practice-section">
-        <section id="how-it-works" className="page how-section">
+        <section
+          id="how-it-works"
+          className="page how-section"
+          tabIndex={-1}
+          aria-labelledby="how-it-works-title"
+        >
           <div className="practice-intro">
             <span className="eyebrow">YOUR WEEK, WITH PURPOSE</span>
-            <h2>A week with a clear next step.</h2>
+            <h2 id="how-it-works-title">A week with a clear next step.</h2>
             <p>
               Understand the lesson. Follow the practice steps. Reflect on the
               work. The planned packages would deliver the upcoming week’s
