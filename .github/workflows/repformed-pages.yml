@@ -8,13 +8,13 @@ on:
         default: preview
         required: true
       confirm_source_sha:
-        description: Exact public source SHA (public candidate 3a08dab3cc03038a1e50424c6bbe05b63ebf2210)
+        description: Exact public source SHA (public candidate 253e6b72d6c996d0d3b92b31776d794baea7959a)
         type: string
         required: true
       expected_production_id:
         description: Independently verified current production deployment ID
         type: string
-        default: c330a2cc-6c09-4494-a35d-fc362b639ef0
+        default: 46157695-dd12-4522-b25e-abcdce6e4fa9
         required: true
       preview_run_id:
         description: Successful preview run ID, required for promotion
@@ -43,7 +43,7 @@ jobs:
         with:
           node-version: 24.19.0
       - name: Test trusted deployment controller without credentials
-        run: node --test control/scripts/tests/pages-release.test.mjs
+        run: node --test control/scripts/tests/pages-release.test.mjs control/scripts/tests/pages-preview-bytes.test.mjs
       - name: Validate explicit source selection
         env:
           CONFIRMED: ${{ inputs.confirm_source_sha }}
@@ -63,6 +63,7 @@ jobs:
         run: |
           test "$(git rev-parse HEAD)" = "$CONFIRMED"
           git merge-base --is-ancestor 5e86084e30c871c3ae79c1f4d3000f9c6dfadb16 HEAD
+          test "$(git rev-parse HEAD^{tree})" = "$(node -p 'require("../control/.github/pages-release/target.json").sourceTreeSha')"
       - name: Install and validate without deployment credentials
         working-directory: source
         run: |
@@ -72,12 +73,14 @@ jobs:
           npm test
           npm run build
           npx playwright install --with-deps chromium
-          npm run test:e2e
-          npm run test:app
+          node ../control/scripts/run-pages-fixture-checks.mjs . e2e artifacts/fixture-isolation-e2e.json
+          node ../control/scripts/run-pages-fixture-checks.mjs . app artifacts/fixture-isolation-app.json
       - name: Package verified bytes (never rebuild during promotion)
         run: |
           mkdir -p candidate
           cp -a source/dist candidate/site
+          cp source/artifacts/fixture-isolation-e2e.json candidate/fixture-e2e.json
+          cp source/artifacts/fixture-isolation-app.json candidate/fixture-app.json
           node control/scripts/pages-release.mjs verify candidate/site candidate/build.json
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
@@ -125,20 +128,50 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
+          path: control
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          path: source
           ref: ${{ inputs.confirm_source_sha }}
           persist-credentials: false
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: repformed-public-candidate
+          path: candidate
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: repformed-preview-proof
+          path: proof
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: 24.19.0
-      - name: Verify deployed preview with fictional intercepted backend only
-        env:
-          DEMO_BASE_URL: ${{ needs.preview.outputs.url }}
+      - name: Install source browser tools without deployment credentials
+        working-directory: source
         run: |
           npm ci
           npx playwright install --with-deps chromium
-          npx playwright test tests/search-metadata.spec.ts tests/deletion-request-help.spec.ts tests/service-policies.spec.ts
+      - name: Verify hosted asset bytes and consumed header configuration
+        env:
+          DEMO_BASE_URL: ${{ needs.preview.outputs.url }}
+          CONFIRM_SOURCE_SHA: ${{ inputs.confirm_source_sha }}
+          EXPECTED_PRODUCTION_ID: ${{ inputs.expected_production_id }}
+        run: node control/scripts/verify-pages-preview-bytes.mjs candidate/build.json proof/preview.json proof/verified-preview.json
+      - name: Verify public preview with contained fictional backend only
+        working-directory: source
+        env:
+          DEMO_BASE_URL: ${{ needs.preview.outputs.url }}
+          EXPECTED_PRODUCTION_ID: ${{ inputs.expected_production_id }}
+        run: node ../control/scripts/run-pages-fixture-checks.mjs . hosted ../proof/fixture-hosted.json ../proof/preview.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: repformed-hosted-acceptance
+          path: proof/
+          retention-days: 7
+          if-no-files-found: error
   promote:
     if: github.repository == 'repformed/Player-Development-Site' && github.ref == 'refs/heads/main' && inputs.stage == 'promote'
     runs-on: ubuntu-latest

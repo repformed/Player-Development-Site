@@ -43,41 +43,37 @@
     "bytes": 18320,
     "sha256": "e7351257e49400eff05aca30a2007289194a900860d30c30770d8b8732897564"
   },
-  "assets/index-BHFKoUtc.js": {
-    "bytes": 773415,
-    "sha256": "6510cf72d16f91653f5807c5bd4447104c98015a6208530db331a7c5505eac4a"
-  },
-  "assets/index-C4ql098J.css": {
-    "bytes": 192025,
-    "sha256": "04a0f8c0150a4ebfc21b98331564547fabee148f888f6dbf1abb348ac210c765"
+  "assets/index-BHJmxDXO.js": {
+    "bytes": 352,
+    "sha256": "9737a064b5a8c4f36c50f9ef5095c79e9494a2930ffd0c4fe9d07a836995e553"
   },
   "assets/index-CcCxm0Mt.js": {
     "bytes": 224850,
     "sha256": "9916ba400484952f429a65035e3f37a7216a4c625077d2ea28c86ad3f483ab92"
   },
-  "assets/index-Cuxin19q.js": {
-    "bytes": 352,
-    "sha256": "37ed7015ce607ee1674dc8ef474609be835d5a9c5c107e7f7b2a91c9c94a1438"
+  "assets/index-CpeDci-k.css": {
+    "bytes": 192974,
+    "sha256": "c43b9db62a3e61adb96d30bacff030bb48fc91768d12ec13045b8fb1e6c2bc4d"
   },
-  "assets/index-Cvgez8Id.js": {
+  "assets/index-CPOUY9iE.js": {
+    "bytes": 773531,
+    "sha256": "8baea49c26d3a9d3a3e3f1d852d30fd7ced6dcd21499a3cbc277edad777661da"
+  },
+  "assets/index-DnyWlPQO.js": {
     "bytes": 376,
-    "sha256": "afed6c2718e791f03ef0811ed6776dbb469b520702cb17bfa257f660dbc57560"
+    "sha256": "7c71d913a4ba2caf1fc627b5806453813f52cd84aae8cfbe85a1cda3c1c2b295"
   },
-  "assets/web-CxM8CCk_.js": {
+  "assets/web-B7bzwIq7.js": {
     "bytes": 192,
-    "sha256": "aaaf574c4381c1e9261307b9891b58aee08bb9ecc6e2b213351c26dec42afcf4"
+    "sha256": "70d0b930084133d2885a11093f6d4936b7e71952a50962223908cc6848020369"
   },
-  "assets/web-DPH2s6S9.js": {
-    "bytes": 998,
-    "sha256": "d844b0a236ee3cf54f15be07034a04af931c4c18aa25d9bba53b5a28a7614b34"
-  },
-  "assets/web-wQtWid5a.js": {
+  "assets/web-BTJ_r-Pp.js": {
     "bytes": 842,
-    "sha256": "ede5079c2fc312e59b09fa6f3ef290c95586a8e1a2726752e18014ec4a605012"
+    "sha256": "ec7747126e1a4757f188bc6bfa5971a98152cf356f1cd5f9e7b7ff7a3d2f6239"
   },
-  "brand/repformed-mark.svg": {
-    "bytes": 204,
-    "sha256": "08daa1a8b1e041bd64b14797b716341c7e3237ac8a8ef18351493208be31c399"
+  "assets/web-H6xNnr9f.js": {
+    "bytes": 998,
+    "sha256": "695b14b5c9abcfe49dccab6185380817605073f20baf2f655f54c715f2afd51e"
   },
   "brand-kit/files/repformed-facebook-cover.png": {
     "bytes": 1576185,
@@ -103,6 +99,10 @@
     "bytes": 3148,
     "sha256": "3b58b3ff35921de8ae8dd1bcbe6ee1efdc06d07e671e07275846452494d3c904"
   },
+  "brand/repformed-mark.svg": {
+    "bytes": 204,
+    "sha256": "08daa1a8b1e041bd64b14797b716341c7e3237ac8a8ef18351493208be31c399"
+  },
   "content-config.json": {
     "bytes": 415,
     "sha256": "bce7ca9fc4b5806db2b10d51e0ef06a04c455bf36d145d331409bb94b0f1c39c"
@@ -119,6 +119,10 @@
     "bytes": 11175,
     "sha256": "370c1aa0f9e005b9d7fce8ced60b9c09589332e1eaa378d6fe4ee3e6270e99c2"
   },
+  "help.css": {
+    "bytes": 3323,
+    "sha256": "8f9e669d3236ed92f7312ec568c018ea0c2f354af868020c69e9f090a9fd8039"
+  },
   "help/fonts/barlow-condensed-LICENSE.txt": {
     "bytes": 6167,
     "sha256": "046ee27d8bddc6b6ee08eee53c96dbf3ec1f6df561644e018507dd8ffcb11d31"
@@ -134,10 +138,6 @@
   "help/fonts/dm-sans.woff2": {
     "bytes": 14200,
     "sha256": "4ab51eb2cd7305d177187908d6397474d4520663f6c6e572feb0a64f4fa80006"
-  },
-  "help.css": {
-    "bytes": 2998,
-    "sha256": "ab753d7a25d656714bfb3292446919417f104245d776435e2f254819e8b2e91f"
   },
   "icons/app-192.png": {
     "bytes": 3753,
@@ -161,15 +161,15 @@
   },
   "index.html": {
     "bytes": 4356,
-    "sha256": "7927eb86d3bc04551bb4d14973f800ed849f448c2afdee733726fe16ad4401f1"
+    "sha256": "1d7ffe59b10438c712a7cbfe489f8ed9354087672bb36abbb581362e1426a2ed"
   },
   "interest-privacy.html": {
     "bytes": 4369,
     "sha256": "93c224cc6745733a2f1204d1a8329a253431839faf26bfa7af00b907dfd7a16b"
   },
   "learn/guides.css": {
-    "bytes": 4723,
-    "sha256": "4c8b6b9f7f4e95352aa91e8b6b4b0295359edbbd5742925f173f29996424e1e5"
+    "bytes": 4972,
+    "sha256": "7c6bc9b6869ca2fb5fe6b7262b2eeb7b03f7393198dd78c77be85d309be9aa58"
   },
   "learn/quizzes.js": {
     "bytes": 951,
@@ -223,9 +223,13 @@
     "bytes": 8719,
     "sha256": "805293474b10a77d04e141fbbdf688409fc4e4cd87b8a0282294efcaa4bb94b7"
   },
-  "partner-guide/README.txt": {
-    "bytes": 1224,
-    "sha256": "a743bb08f2b7ead4dbe48b2fa8ba652c5ba8b5cf1efe2f9c44d1c23833273d70"
+  "partner-guide.html": {
+    "bytes": 27822,
+    "sha256": "041c8d248039be42912f686780acbd1fc3eb3067ac20dff15fb7e595f0bedd47"
+  },
+  "partner-guide.pdf": {
+    "bytes": 716481,
+    "sha256": "73db4de87f4395cfb7b1591897639ce727b0a7054fb25430e4179d7dad072a87"
   },
   "partner-guide/approval.jpg": {
     "bytes": 34067,
@@ -259,6 +263,10 @@
     "bytes": 42413,
     "sha256": "9f30c4e16ab721b9eb4f348782e3b765e7c13fc0115230de819905b9739cf56f"
   },
+  "partner-guide/README.txt": {
+    "bytes": 1224,
+    "sha256": "a743bb08f2b7ead4dbe48b2fa8ba652c5ba8b5cf1efe2f9c44d1c23833273d70"
+  },
   "partner-guide/resume.jpg": {
     "bytes": 41871,
     "sha256": "842eab03c3f79de4920b0c092f647972306714e891ed6fb8f08603af5eeba8a4"
@@ -278,14 +286,6 @@
   "partner-guide/website.jpg": {
     "bytes": 139170,
     "sha256": "617585a65bf19fa98adfbf75f8da6c60d6cadbcada5d13ec888408183fb8275a"
-  },
-  "partner-guide.html": {
-    "bytes": 27822,
-    "sha256": "041c8d248039be42912f686780acbd1fc3eb3067ac20dff15fb7e595f0bedd47"
-  },
-  "partner-guide.pdf": {
-    "bytes": 716481,
-    "sha256": "73db4de87f4395cfb7b1591897639ce727b0a7054fb25430e4179d7dad072a87"
   },
   "phone-test.html": {
     "bytes": 6226,
@@ -329,7 +329,7 @@
   },
   "sw.js": {
     "bytes": 3479,
-    "sha256": "953eec3c1c3cd7202c48f6be91102c5ac4ab34c4e552f7d4db2b046fe5ba41f7"
+    "sha256": "0c43b9a1b6414a7d193620a9dd42b3c91d62f3f1156ff499597d6bdfe403a02c"
   },
   "third-party-notices.txt": {
     "bytes": 34786,
