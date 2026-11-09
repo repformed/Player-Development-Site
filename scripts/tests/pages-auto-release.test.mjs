@@ -23,6 +23,7 @@ import {
   proofGuard,
   inspectSite,
   automaticDeploy,
+  automaticRead,
   knownNoWrite,
 } from "../pages-auto-release.mjs";
 import {
@@ -723,4 +724,86 @@ test("known-no-write classification never includes denial, cancellation or uncer
     {},
   ])
     assert.equal(knownNoWrite(error), false);
+});
+test("actual provider pagination metadata handles a full final page without probing an invalid extra page", async () => {
+  const calls = [];
+  const list = await automaticRead(
+    "/accounts/fictional/pages/projects/repformed/deployments?per_page=20&page=2",
+    "local-fictional-placeholder",
+    "https://api.cloudflare.com/client/v4",
+    async (url) => {
+      calls.push(String(url));
+      return new globalThis.Response(
+        JSON.stringify({
+          success: true,
+          result: Array.from({ length: 20 }, (_, i) => ({
+            id: String(i),
+            latest_stage: { status: "success" },
+          })),
+          result_info: {
+            page: 2,
+            per_page: 20,
+            total_count: 40,
+            total_pages: 2,
+          },
+        }),
+        { status: 200, headers: { "content-type": "application/json" } },
+      );
+    },
+  );
+  assert.equal(calls.length, 1);
+  assert.equal(list.length, 20);
+  assert.equal(list.pageInfo.page, list.pageInfo.total_pages);
+  assert.equal(JSON.stringify(list).includes("pageInfo"), false);
+  await assert.rejects(
+    automaticRead(
+      "/accounts/fictional/pages/projects/repformed/deployments?per_page=20&page=1",
+      "local-fictional-placeholder",
+      "https://api.cloudflare.com/client/v4",
+      async () =>
+        new globalThis.Response(JSON.stringify({ success: true, result: [] }), {
+          status: 200,
+        }),
+    ),
+    /pagination metadata missing/,
+  );
+});
+test("preflight consumes full final deployment page using metadata, with no invalid next request", async () => {
+  const f = await orchestrationFixture(),
+    dir = await mkdtemp(resolve(tmpdir(), "repformed-auto-pages-")),
+    seen = [];
+  const read = f.ports.read;
+  f.ports.read = async (...args) => {
+    const match = /\/deployments\?per_page=20&page=(\d+)$/.exec(args[0]);
+    if (match) {
+      const page = Number(match[1]);
+      seen.push(page);
+      assert.ok(page <= 2);
+      const rows = Array.from({ length: 20 }, () => ({
+        latest_stage: { status: "success" },
+      }));
+      Object.defineProperty(rows, "pageInfo", {
+        value: { page, total_pages: 2 },
+      });
+      return rows;
+    }
+    return read(...args);
+  };
+  try {
+    await automaticDeploy(
+      "preview",
+      f.site,
+      f.b,
+      resolve(dir, "preview.json"),
+      f.e,
+      null,
+      null,
+      null,
+      f.ports,
+    );
+    assert.deepEqual(seen, [1, 2]);
+    assert.equal(f.state.count, 1);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
 });

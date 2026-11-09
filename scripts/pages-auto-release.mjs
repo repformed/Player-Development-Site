@@ -29,6 +29,37 @@ import {
 } from "./pages-auto-scope.mjs";
 const hash = (b) => createHash("sha256").update(b).digest("hex");
 const readJSON = async (p) => JSON.parse(await readFile(p, "utf8"));
+// Preserve provider pagination evidence without changing the existing API guard.
+export async function automaticRead(
+  path,
+  token,
+  host = "https://api.cloudflare.com/client/v4",
+  fetcher = globalThis.fetch,
+) {
+  let pageInfo;
+  const listing =
+    host === "https://api.cloudflare.com/client/v4" &&
+    path.includes("/deployments?");
+  const value = await api(path, token, host, async (...args) => {
+    const response = await fetcher(...args);
+    if (listing && response.ok)
+      pageInfo = (await response.clone().json()).result_info;
+    return response;
+  });
+  if (listing) {
+    must(
+      Array.isArray(value) &&
+        pageInfo &&
+        Number.isInteger(pageInfo.page) &&
+        Number.isInteger(pageInfo.total_pages) &&
+        pageInfo.page >= 1 &&
+        pageInfo.total_pages >= pageInfo.page,
+      "Provider pagination metadata missing",
+    );
+    Object.defineProperty(value, "pageInfo", { value: pageInfo });
+  }
+  return value;
+}
 export const knownNoWrite = (error) =>
   ["PUBLIC_SUPERSEDED", "PUBLIC_BASELINE_CHANGED"].includes(error.code);
 export function autoGuard(env) {
@@ -288,7 +319,11 @@ async function providerPreflight(build, env, ports) {
       env.CLOUDFLARE_API_TOKEN,
     );
     pendingGuard(list);
-    if (list.length < 20) break;
+    if (list.pageInfo) {
+      must(list.pageInfo.page === page, "Provider pagination mismatch");
+      if (page === list.pageInfo.total_pages) break;
+    } else if (list.length < 20) break; // Injected local adapter fixtures only.
+
     must(
       page < 100,
       "Provider inventory exceeds bounded reconciliation; review required",
@@ -324,7 +359,7 @@ export async function automaticDeploy(
   preview = null,
   hosted = null,
   fixture = null,
-  ports = { read: api, upload: execFileSync },
+  ports = { read: automaticRead, upload: execFileSync },
 ) {
   boundBuild(build, env);
   const inspected = await inspectSite(site);
