@@ -11,7 +11,7 @@ concurrency:
   group: ${{ github.event_name == 'push' && 'repformed-pages-release' || format('repformed-public-review-{0}', github.event.pull_request.number) }}
   cancel-in-progress: false
 env:
-  PUBLIC_CONTROL_SHA: "0000000000000000000000000000000000000000"
+  PUBLIC_CONTROL_SHA: "874444b8a1e6d8f37a2e5f70ef93c26948e28d6d"
   PUBLIC_AUTO_SOURCE_SHA: ${{ github.sha }}
 jobs:
   review_read_capability:
