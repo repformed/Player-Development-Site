@@ -1,0 +1,35 @@
+.public-back-top {
+  display: flex;
+  justify-content: center;
+  padding: 1.5rem 1rem 2.5rem;
+}
+.public-back-top button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  min-height: 48px;
+  padding: 0.65rem 1rem;
+  border: 1px solid #d6b45e;
+  border-radius: 8px;
+  background: #111;
+  color: #f2d78b;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.public-back-top button:hover {
+  background: #252014;
+}
+.public-back-top button:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 5px;
+}
+.public-back-top img {
+  flex: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .public-back-top button {
+    scroll-behavior: auto;
+  }
+}

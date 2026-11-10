@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import {
   ArrowDown,
   ArrowRight,
@@ -11,6 +11,8 @@ import { AthleteScene } from "./AthleteScene";
 import { Reveal } from "./Experience";
 import { PACKAGE_PROPOSALS } from "./packageProposals";
 import { useMotion } from "./motion";
+
+const BackToTop = lazy(() => import("./publicFeatures/BackToTop"));
 
 const media = `${import.meta.env.BASE_URL}media/`;
 
@@ -33,7 +35,8 @@ export function Home() {
           <p className="hero-description">
             Football IQ means understanding the rules, positions, terminology,
             reading plays and each player’s job. We’re building a path from
-            learning the game to purposeful practice for families and adult athletes.
+            learning the game to purposeful practice for families and adult
+            athletes.
           </p>
           <p className="home-availability">
             Prelaunch. Membership enrollment is not open; explore the plans and
@@ -331,15 +334,27 @@ export function Home() {
 
       <Reveal>
         <section className="page" aria-labelledby="public-learning-title">
-          <span className="eyebrow">READ. UNDERSTAND. ASK A BETTER QUESTION.</span>
+          <span className="eyebrow">
+            READ. UNDERSTAND. ASK A BETTER QUESTION.
+          </span>
           <h2 id="public-learning-title">Start learning before launch.</h2>
-          <p>Free text lessons, diagrams and reading checks. Explore what online
-            football learning can support, without an account or purchase.</p>
+          <p>
+            Free text lessons, diagrams and reading checks. Explore what online
+            football learning can support, without an account or purchase.
+          </p>
           <div className="actions">
-            <a className="button" href="/online-football-training/">Online football training</a>
-            <a className="text-button" href="/football-iq/">Football IQ lessons</a>
-            <a className="text-button" href="/offensive-line-fundamentals/">Offensive-line fundamentals</a>
-            <a className="text-button" href="/parent-guide/">A parent’s guide</a>
+            <a className="button" href="/online-football-training/">
+              Online football training
+            </a>
+            <a className="text-button" href="/football-iq/">
+              Football IQ lessons
+            </a>
+            <a className="text-button" href="/offensive-line-fundamentals/">
+              Offensive-line fundamentals
+            </a>
+            <a className="text-button" href="/parent-guide/">
+              A parent’s guide
+            </a>
           </div>
         </section>
       </Reveal>
@@ -369,6 +384,9 @@ export function Home() {
           </div>
         </section>
       </Reveal>
+      <Suspense fallback={null}>
+        <BackToTop animate={enabled} />
+      </Suspense>
     </main>
   );
 }
