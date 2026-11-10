@@ -30,7 +30,7 @@ export function appShell(): Plugin {
           /\.(html|js|css|woff2?)$/.test(name),
         ),
         ...publicFiles,
-      ];
+      ].sort();
       const template = readFileSync("build/service-worker.txt", "utf8");
       const hash = createHash("sha256").update(template);
       for (const name of files) {

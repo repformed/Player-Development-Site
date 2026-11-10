@@ -11,7 +11,7 @@ concurrency:
   group: ${{ github.event_name == 'push' && 'repformed-pages-release' || format('repformed-public-review-{0}', github.event.pull_request.number) }}
   cancel-in-progress: false
 env:
-  PUBLIC_CONTROL_SHA: "9b275fa415ab787802494419877b8e1a554c10e1"
+  PUBLIC_CONTROL_SHA: "0000000000000000000000000000000000000000"
   PUBLIC_AUTO_SOURCE_SHA: ${{ github.sha }}
 jobs:
   review_read_capability:
@@ -33,9 +33,92 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           PUBLIC_REVIEW_PR: ${{ github.event.pull_request.number }}
         run: node control/scripts/pages-review-capability.mjs "$PUBLIC_REVIEW_PR"
-  build:
-    name: Validate exact public source
+  route:
+    name: Authenticate exact release route
     if: github.event_name == 'push' && github.repository == 'repformed/Player-Development-Site' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      kind: ${{ steps.route.outputs.kind }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ env.PUBLIC_CONTROL_SHA }}
+          path: control
+          persist-credentials: false
+      - uses: ./control/.github/actions/release-source
+      - name: Classify and read exact review without installing source packages
+        id: route
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node control/scripts/pages-routed-release.mjs route source route/route.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: repformed-release-route
+          path: route/
+          retention-days: 7
+          if-no-files-found: error
+  documents:
+    name: Verify documentation without deployment
+    needs: route
+    if: needs.route.outputs.kind == 'reader-documentation'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ env.PUBLIC_CONTROL_SHA }}
+          path: control
+          persist-credentials: false
+      - uses: ./control/.github/actions/release-source
+      - uses: ./control/.github/actions/release-inputs
+        with:
+          baseline: "false"
+      - name: Require complete ordinary CI and current exact review
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node control/scripts/pages-routed-release.mjs docs source route/route.json proof/documentation.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: repformed-docs-acceptance
+          path: proof/
+          retention-days: 30
+          if-no-files-found: error
+  baseline:
+    name: Capture accepted production baseline
+    needs: route
+    if: contains(fromJSON('["public-feature","development-dependencies","controller-bootstrap"]'), needs.route.outputs.kind)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      ready: ${{ steps.baseline.outputs.ready }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ env.PUBLIC_CONTROL_SHA }}
+          path: control
+          persist-credentials: false
+      - uses: ./control/.github/actions/release-source
+      - uses: ./control/.github/actions/release-inputs
+        with:
+          baseline: "false"
+      - name: Read and bind accepted production
+        id: baseline
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.REPFORMED_PAGES_API_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
+        run: node control/scripts/pages-routed-release.mjs baseline source route/route.json baseline-context/baseline.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: repformed-current-baseline
+          path: baseline-context/
+          retention-days: 7
+          if-no-files-found: warn
+  tests:
+    name: Test exact source without credentials
+    needs: [route, baseline]
+    if: needs.baseline.outputs.ready == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
@@ -44,28 +127,16 @@ jobs:
           ref: ${{ env.PUBLIC_CONTROL_SHA }}
           path: control
           persist-credentials: false
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
-        with:
-          ref: ${{ github.sha }}
-          fetch-depth: 0
-          path: source
-          persist-credentials: false
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
-        with:
-          node-version: 24.19.0
-      - name: Reject source outside reviewed public scope before installation
-        run: node control/scripts/pages-auto-release.mjs precheck source
-      - name: Install and validate without provider credentials
-        working-directory: source
-        run: |
-          npm ci
-          ln -s ../source/node_modules ../control/node_modules
-      - name: Read exact independent review with existing repository token
+      - uses: ./control/.github/actions/release-source
+      - uses: ./control/.github/actions/release-inputs
+      - name: Install without repository or provider credentials
         working-directory: source
         env:
-          GH_TOKEN: ${{ github.token }}
-        run: node ../control/scripts/pages-auto-release.mjs scope . artifacts/public-scope.json
-      - name: Test reviewed public source without repository or provider credentials
+          RELEASE_KIND: ${{ needs.route.outputs.kind }}
+        run: |
+          npm ci --ignore-scripts
+          ln -s ../source/node_modules ../control/node_modules
+      - name: Test exact source without repository or provider credentials
         working-directory: source
         run: |
           test ! -e artifacts/public-compiler-inventory.json
@@ -73,16 +144,53 @@ jobs:
           npm run typecheck
           npm test
           npm run build
-          PUBLIC_TEST_SOURCE="$PWD" PUBLIC_TEST_SITE="$PWD/dist" node --test ../control/scripts/tests/pages-release.test.mjs ../control/scripts/tests/pages-preview-bytes.test.mjs ../control/scripts/tests/pages-auto-release.test.mjs ../control/scripts/tests/pages-public-*.test.mjs ../control/scripts/tests/pages-owner-attestation.test.mjs
+          PUBLIC_TEST_SOURCE="$PWD" PUBLIC_TEST_SITE="$PWD/dist" node --test ../control/scripts/tests/pages-*.test.mjs
           npx playwright install --with-deps chromium
           node ../control/scripts/run-pages-fixture-checks.mjs . e2e artifacts/fixture-e2e.json
           node ../control/scripts/run-pages-fixture-checks.mjs . app artifacts/fixture-app.json
-      - name: Bind validated source to new static artifact manifest
+      - name: Install controller-pinned syntax tools without credentials
+        run: npm ci --ignore-scripts --no-audit --no-fund --prefix control/.github/pages-release/analysis-tools
+      - name: Bind complete tested bytes and containment receipts
+        run: node control/scripts/pages-routed-release.mjs tested source route/route.json baseline-context/baseline.json source/artifacts/tested-build.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: repformed-source-test-proof
+          path: |
+            source/artifacts/fixture-*
+            source/artifacts/tested-build.json
+          retention-days: 7
+          if-no-files-found: error
+  build:
+    name: Compile exact tested source on fresh runner
+    needs: [route, baseline, tests]
+    if: needs.baseline.outputs.ready == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ env.PUBLIC_CONTROL_SHA }}
+          path: control
+          persist-credentials: false
+      - uses: ./control/.github/actions/release-source
+      - uses: ./control/.github/actions/release-inputs
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: repformed-source-test-proof
+          path: source/artifacts
+      - name: Fresh locked compilation without tests or credentials
+        working-directory: source
+        run: |
+          test ! -e artifacts/public-compiler-inventory.json
+          npm ci --ignore-scripts
+          npm run build
+      - name: Install controller-pinned syntax tools without credentials
+        run: npm ci --ignore-scripts --no-audit --no-fund --prefix control/.github/pages-release/analysis-tools
+      - name: Bind fresh compiler bytes to complete tested inventory
         run: |
           mkdir -p candidate
-          node control/scripts/pages-auto-release.mjs manifest source candidate/build.json
+          node control/scripts/pages-routed-release.mjs manifest source route/route.json baseline-context/baseline.json candidate/build.json
           cp -a source/dist candidate/site
-          cp source/artifacts/public-scope.json candidate/
           cp source/artifacts/fixture-* candidate/
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
@@ -92,7 +200,7 @@ jobs:
           if-no-files-found: error
   preview:
     name: Preview exact public artifact
-    needs: build
+    needs: [route, baseline, build]
     runs-on: ubuntu-latest
     timeout-minutes: 15
     outputs:
@@ -104,24 +212,27 @@ jobs:
           ref: ${{ env.PUBLIC_CONTROL_SHA }}
           path: control
           persist-credentials: false
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+      - uses: ./control/.github/actions/release-source
+      - uses: ./control/.github/actions/release-inputs
         with:
-          node-version: 24.19.0
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
-        with:
-          name: repformed-auto-candidate
-          path: candidate
+          candidate: "true"
+      - name: Download authenticated prior artifacts without source execution
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node control/scripts/pages-routed-release.mjs download-baseline source route/route.json baseline-context/baseline.json baseline
+      - name: Install controller-pinned syntax tools without credentials
+        run: npm ci --ignore-scripts --no-audit --no-fund --prefix control/.github/pages-release/analysis-tools
+      - name: Validate candidate and dependency comparison without credentials
+        run: node control/scripts/pages-routed-release.mjs prepare source route/route.json baseline-context/baseline.json candidate/build.json candidate/site baseline
       - name: Install existing pinned Pages CLI without provider credentials
         run: npm ci --ignore-scripts --no-audit --no-fund --prefix control/.github/pages-release/tools
-      - name: Validate downloaded artifact before provider credentials
-        run: node control/scripts/pages-auto-release.mjs prepare candidate/build.json candidate/site
       - name: Capture fresh baseline and upload verified public preview
         id: preview
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.REPFORMED_PAGES_API_TOKEN }}
           GH_TOKEN: ${{ github.token }}
           PAGES_CLI: ${{ github.workspace }}/control/.github/pages-release/tools
-        run: node control/scripts/pages-auto-release.mjs preview candidate/build.json candidate/site proof/preview.json
+        run: node control/scripts/pages-routed-release.mjs preview source route/route.json baseline-context/baseline.json candidate/build.json candidate/site baseline
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
@@ -131,7 +242,7 @@ jobs:
           if-no-files-found: warn
   verify_preview:
     name: Verify exact hosted public artifact
-    needs: [build, preview]
+    needs: [route, build, preview]
     if: needs.preview.outputs.ready == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -159,8 +270,10 @@ jobs:
           path: proof
       - name: Install browser tools without provider credentials
         working-directory: source
+        env:
+          RELEASE_KIND: ${{ needs.route.outputs.kind }}
         run: |
-          npm ci
+          npm ci --ignore-scripts
           npx playwright install --with-deps chromium
       - name: Verify all served bytes and effective configured headers
         env:
@@ -182,7 +295,7 @@ jobs:
           if-no-files-found: warn
   promote:
     name: Promote exact public artifact
-    needs: [build, preview, verify_preview]
+    needs: [route, baseline, build, preview, verify_preview]
     if: needs.preview.outputs.ready == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -192,27 +305,27 @@ jobs:
           ref: ${{ env.PUBLIC_CONTROL_SHA }}
           path: control
           persist-credentials: false
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+      - uses: ./control/.github/actions/release-source
+      - uses: ./control/.github/actions/release-inputs
         with:
-          node-version: 24.19.0
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
-        with:
-          name: repformed-auto-candidate
-          path: candidate
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
-        with:
-          name: repformed-auto-hosted-acceptance
-          path: proof
+          candidate: "true"
+          hosted: "true"
+      - name: Download authenticated prior artifacts without source execution
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node control/scripts/pages-routed-release.mjs download-baseline source route/route.json baseline-context/baseline.json baseline
+      - name: Install controller-pinned syntax tools without credentials
+        run: npm ci --ignore-scripts --no-audit --no-fund --prefix control/.github/pages-release/analysis-tools
+      - name: Validate candidate and dependency comparison without credentials
+        run: node control/scripts/pages-routed-release.mjs prepare source route/route.json baseline-context/baseline.json candidate/build.json candidate/site baseline
       - name: Install existing pinned Pages CLI without provider credentials
         run: npm ci --ignore-scripts --no-audit --no-fund --prefix control/.github/pages-release/tools
-      - name: Validate downloaded artifact before provider credentials
-        run: node control/scripts/pages-auto-release.mjs prepare candidate/build.json candidate/site
       - name: Promote only exact successful preview bytes
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.REPFORMED_PAGES_API_TOKEN }}
           GH_TOKEN: ${{ github.token }}
           PAGES_CLI: ${{ github.workspace }}/control/.github/pages-release/tools
-        run: node control/scripts/pages-auto-release.mjs promote candidate/build.json candidate/site proof/production.json proof/preview.json proof/verified-preview.json
+        run: node control/scripts/pages-routed-release.mjs promote source route/route.json baseline-context/baseline.json candidate/build.json candidate/site baseline
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
