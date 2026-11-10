@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { resolve } from "node:path";
 import type { Plugin } from "vite";
 
@@ -45,11 +45,43 @@ export function appShell(): Plugin {
               : readFileSync(`public/${name}`),
           );
       }
+      const worker = template
+        .replace("__VERSION__", hash.digest("hex").slice(0, 16))
+        .replace("__ASSETS__", JSON.stringify(files));
+      writeFileSync(resolve(options.dir || "dist", "sw.js"), worker);
+      // Release metadata stays outside the published directory. Build tooling is
+      // immutable to ordinary feature updates; it records compiler outputs.
+      mkdirSync("artifacts", { recursive: true });
+      const generated = Object.fromEntries(
+        Object.entries(bundle).map(([name, asset]) => {
+          const bytes = Buffer.from(
+            asset.type === "chunk" ? asset.code : asset.source,
+          );
+          return [
+            name,
+            {
+              bytes: bytes.length,
+              sha256: createHash("sha256").update(bytes).digest("hex"),
+            },
+          ];
+        }),
+      );
       writeFileSync(
-        resolve(options.dir || "dist", "sw.js"),
-        template
-          .replace("__VERSION__", hash.digest("hex").slice(0, 16))
-          .replace("__ASSETS__", JSON.stringify(files)),
+        "artifacts/public-compiler-inventory.json",
+        JSON.stringify(
+          {
+            version: 1,
+            generated,
+            precache: files,
+            worker: {
+              bytes: Buffer.byteLength(worker),
+              sha256: createHash("sha256").update(worker).digest("hex"),
+            },
+            templateSha256: createHash("sha256").update(template).digest("hex"),
+          },
+          null,
+          2,
+        ) + "\n",
       );
     },
   };

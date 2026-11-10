@@ -5,6 +5,7 @@ import { fileURLToPath, URL } from "node:url";
 import process from "node:process";
 import console from "node:console";
 
+import { completeCaseEvidence } from "./pages-public-cases.mjs";
 const control = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const [sourceArg, mode, proofArg, ...rest] = process.argv.slice(2);
 const listOnly = rest.includes("--list"),
@@ -115,6 +116,7 @@ try {
       "tests/service-policies.spec.ts",
       "tests/public-home-focus.spec.ts",
       "tests/public-usability.spec.ts",
+      "tests/public-features/",
     );
   if (listOnly) args.push("--list");
   execFileSync(resolve(source, "node_modules/.bin/playwright"), args, {
@@ -153,13 +155,28 @@ try {
       cwd: source,
       encoding: "utf8",
     }).trim();
-    if (
+    let caseKeys;
+    if (automatic) {
+      const baseline = JSON.parse(
+        await readFile(
+          resolve(control, ".github/pages-release/public-baseline-cases.json"),
+        ),
+      );
+      let expected = null;
+      if (mode === "hosted") {
+        const candidate = JSON.parse(
+          await readFile(
+            resolve(dirname(previewArg), "../candidate/build.json"),
+          ),
+        );
+        expected = candidate.expectedHostedCases;
+      }
+      caseKeys = completeCaseEvidence(report, baseline, mode, expected).keys;
+    } else if (
       actualHead === target.sourceSha &&
-      ((mode === "e2e" && cases.length !== 610) ||
-        (mode === "app" && cases.length !== 12) ||
-        (mode === "hosted" && cases.length !== 86))
+      !({ e2e: 610, app: 12, hosted: 86 }[mode] === cases.length)
     )
-      throw Error("Required release case count changed");
+      throw Error("Required manual release case count changed");
     const receipt = {
       ...result,
       suite: mode,
@@ -174,6 +191,7 @@ try {
         encoding: "utf8",
       }).trim(),
       sourceSha: actualHead,
+      caseKeys,
       cases: cases.length,
       passed: cases.length,
       failed: 0,
