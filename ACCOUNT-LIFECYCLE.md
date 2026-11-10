@@ -1,6 +1,6 @@
 # Adult pilot invitations and account closure
 
-The website and native app add Owner-controlled adult invitations, verified recipient acceptance, full customer account erasure, and assisted review for staff/guardian-managed accounts. Public signup, junior gates, payments and existing roles stay closed/unchanged. [Account help](https://coachbilliott.github.io/Player-Development-Site/account-help.html) explains the controls.
+The website and native app add Owner-controlled adult invitations, verified recipient acceptance, full customer account erasure, and assisted review for staff/guardian-managed accounts. Public signup, junior gates, payments and existing roles stay closed/unchanged. [Account help](https://repformed.com/account-help.html) explains the controls.
 
 ## Invitation workflow
 
