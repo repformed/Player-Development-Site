@@ -1,20 +1,41 @@
 name: Repformed automatic public release
 on:
+  pull_request:
+    branches: [main]
   push:
     branches: [main]
 permissions:
   contents: read
   actions: read
 concurrency:
-  group: repformed-pages-release
+  group: ${{ github.event_name == 'push' && 'repformed-pages-release' || format('repformed-public-review-{0}', github.event.pull_request.number) }}
   cancel-in-progress: false
 env:
-  PUBLIC_CONTROL_SHA: "490c4a801e2fe62d859a1d2ab7aab6e635173554"
+  PUBLIC_CONTROL_SHA: "0000000000000000000000000000000000000000"
   PUBLIC_AUTO_SOURCE_SHA: ${{ github.sha }}
 jobs:
+  review_read_capability:
+    name: Read existing public review metadata
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ env.PUBLIC_CONTROL_SHA }}
+          path: control
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24.19.0
+      - name: Check existing token read capability without provider access
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PUBLIC_REVIEW_PR: ${{ github.event.pull_request.number }}
+        run: node control/scripts/pages-review-capability.mjs "$PUBLIC_REVIEW_PR"
   build:
     name: Validate exact public source
-    if: github.repository == 'repformed/Player-Development-Site' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.repository == 'repformed/Player-Development-Site' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
@@ -39,12 +60,20 @@ jobs:
         run: |
           npm ci
           ln -s ../source/node_modules ../control/node_modules
-          node ../control/scripts/pages-auto-release.mjs scope . artifacts/public-scope.json
+      - name: Read exact independent review with existing repository token
+        working-directory: source
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node ../control/scripts/pages-auto-release.mjs scope . artifacts/public-scope.json
+      - name: Test reviewed public source without repository or provider credentials
+        working-directory: source
+        run: |
+          test ! -e artifacts/public-compiler-inventory.json
           npm run lint
           npm run typecheck
           npm test
           npm run build
-          PUBLIC_TEST_SITE="$PWD/dist" node --test ../control/scripts/tests/pages-release.test.mjs ../control/scripts/tests/pages-preview-bytes.test.mjs ../control/scripts/tests/pages-auto-release.test.mjs
+          PUBLIC_TEST_SOURCE="$PWD" PUBLIC_TEST_SITE="$PWD/dist" node --test ../control/scripts/tests/pages-release.test.mjs ../control/scripts/tests/pages-preview-bytes.test.mjs ../control/scripts/tests/pages-auto-release.test.mjs ../control/scripts/tests/pages-public-*.test.mjs ../control/scripts/tests/pages-owner-attestation.test.mjs
           npx playwright install --with-deps chromium
           node ../control/scripts/run-pages-fixture-checks.mjs . e2e artifacts/fixture-e2e.json
           node ../control/scripts/run-pages-fixture-checks.mjs . app artifacts/fixture-app.json

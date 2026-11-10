@@ -20,13 +20,19 @@ import {
   verifySite,
 } from "./pages-release.mjs";
 import { verifyBoundPreviewBytes } from "./verify-pages-preview-bytes.mjs";
+import { root, must, cssFiles, htmlFiles } from "./pages-auto-scope.mjs";
+import { publicInputScope } from "./pages-public-inputs.mjs";
 import {
-  eligibility,
-  root,
-  must,
-  cssFiles,
-  htmlFiles,
-} from "./pages-auto-scope.mjs";
+  publicBuildInputs,
+  inspectPublicArtifact,
+} from "./pages-public-artifact.mjs";
+import {
+  sourceAuthorization,
+  publicReviewEvidence,
+  sameSourceAuthorization,
+  graphReader,
+} from "./pages-public-evidence.mjs";
+import { completeCaseEvidence } from "./pages-public-cases.mjs";
 const hash = (b) => createHash("sha256").update(b).digest("hex");
 const readJSON = async (p) => JSON.parse(await readFile(p, "utf8"));
 // Preserve provider pagination evidence without changing the existing API guard.
@@ -225,7 +231,7 @@ const gh = (path, env, ports) =>
     env.GH_TOKEN,
     "https://api.github.com",
   );
-async function currentSource(build, env, ports, allowSuperseded = false) {
+async function currentMain(env, ports, allowSuperseded = false) {
   const ref = await gh("/git/ref/heads/main", env, ports);
   if (ref.object?.sha !== env.GITHUB_SHA) {
     if (allowSuperseded) return false;
@@ -233,9 +239,29 @@ async function currentSource(build, env, ports, allowSuperseded = false) {
     error.code = "PUBLIC_SUPERSEDED";
     throw error;
   }
+  return true;
+}
+async function currentSource(build, env, ports, allowSuperseded = false) {
+  if (!(await currentMain(env, ports, allowSuperseded))) return false;
+  if (build.authorization) {
+    const before = build.authorization;
+    const anchor = before.anchor || before;
+    if (anchor.kind !== "verified-bootstrap") {
+      const latest = await (ports.review || publicReviewEvidence)(
+        anchor.sourceSha,
+        (p) => ports.read(p, env.GH_TOKEN, "https://api.github.com"),
+        graphReader(env.GH_TOKEN, ports.fetch || globalThis.fetch),
+      );
+      must(latest, "Current exact source review is unavailable");
+      sameSourceAuthorization(
+        before,
+        before.anchor ? { ...before, anchor: latest } : latest,
+      );
+    }
+  }
   const commit = await gh("/git/commits/" + env.GITHUB_SHA, env, ports);
   must(commit.tree?.sha === build.sourceTree, "Source tree changed");
-  return true;
+  return currentMain(env, ports, allowSuperseded);
 }
 async function priorRuns(env, ports) {
   // Audit automatic writers. A failed/cancelled credential job is a hard stop,
@@ -362,7 +388,14 @@ export async function automaticDeploy(
   ports = { read: automaticRead, upload: execFileSync },
 ) {
   boundBuild(build, env);
-  const inspected = await inspectSite(site);
+  must(
+    build.authorization?.sourceSha === build.sourceSha &&
+      build.authorization?.sourceTree === build.sourceTree &&
+      Array.isArray(build.expectedHostedCases) &&
+      build.expectedHostedCases.length > 0,
+    "Reviewed source and mandatory hosted case proof required",
+  );
+  const inspected = await inspectPublicArtifact(site, build.inputInventory);
   must(
     inspected.workerCacheVersion === build.workerCacheVersion &&
       inspected.manifestDigest === build.manifestDigest &&
@@ -381,7 +414,7 @@ export async function automaticDeploy(
         hosted.runId === env.GITHUB_RUN_ID &&
         hosted.deploymentId === preview.deploymentId &&
         hosted.manifestDigest === build.manifestDigest &&
-        hosted.verifiedFiles === 83 &&
+        hosted.verifiedFiles === build.servedFileCount &&
         hosted.sourceTree === build.sourceTree &&
         hosted.workflowSha === env.GITHUB_SHA &&
         hosted.attempt === 1 &&
@@ -395,8 +428,10 @@ export async function automaticDeploy(
         fixture.runId === env.GITHUB_RUN_ID &&
         fixture.attempt === 1 &&
         fixture.suite === "hosted" &&
-        fixture.cases === 86 &&
-        fixture.passed === 86 &&
+        fixture.cases === build.expectedHostedCases.length &&
+        fixture.passed === build.expectedHostedCases.length &&
+        JSON.stringify(fixture.caseKeys) ===
+          JSON.stringify(build.expectedHostedCases) &&
         fixture.failed === 0 &&
         fixture.skipped === 0 &&
         fixture.retries === 0 &&
@@ -408,7 +443,7 @@ export async function automaticDeploy(
       .sort();
     must(
       Array.isArray(hosted.files) &&
-        hosted.files.length === 83 &&
+        hosted.files.length === build.servedFileCount &&
         JSON.stringify(hosted.files.map((x) => x.path).sort()) ===
           JSON.stringify(served),
       "Hosted file inventory mismatch",
@@ -483,6 +518,7 @@ export async function automaticDeploy(
         error.code = "PUBLIC_BASELINE_CHANGED";
         throw error;
       }
+      await currentMain(env, ports);
       return current;
     },
     baseline,
@@ -601,12 +637,19 @@ async function main() {
     "Pinned trusted controller checkout required",
   );
   if (command === "precheck" || command === "scope") {
-    const result = await eligibility(
+    const result = await publicInputScope(
       resolve(a),
       env.PUBLIC_CONTROL_SHA,
       env.GITHUB_SHA,
       { syntax: command === "scope" },
     );
+    if (command === "scope")
+      result.authorization = await sourceAuthorization(
+        resolve(a),
+        env.GITHUB_SHA,
+        (p) => automaticRead(p, env.GH_TOKEN, "https://api.github.com"),
+        graphReader(env.GH_TOKEN),
+      );
     if (b)
       await writeProof(b, {
         ...result,
@@ -618,11 +661,21 @@ async function main() {
   }
   if (command === "manifest") {
     const source = resolve(a);
-    const scope = await eligibility(
+    const scope = await publicInputScope(
       source,
       env.PUBLIC_CONTROL_SHA,
       env.GITHUB_SHA,
     );
+    const reviewed = await readJSON(
+      resolve(source, "artifacts/public-scope.json"),
+    );
+    must(
+      reviewed.sourceSha === env.GITHUB_SHA &&
+        reviewed.sourceTree === scope.sourceTree &&
+        reviewed.controlSha === env.PUBLIC_CONTROL_SHA,
+      "Exact reviewed source receipt required",
+    );
+    scope.authorization = reviewed.authorization;
     execFileSync(
       "git",
       [
@@ -642,7 +695,24 @@ async function main() {
       ],
       { cwd: source, stdio: "pipe" },
     );
-    const result = await inspectSite(resolve(source, "dist"));
+    const result = await inspectPublicArtifact(
+      resolve(source, "dist"),
+      await publicBuildInputs(source),
+    );
+    const baseline = await readJSON(
+      resolve(root, ".github/pages-release/public-baseline-cases.json"),
+    );
+    const e2e = completeCaseEvidence(
+      await readJSON(resolve(source, "artifacts/fixture-e2e.json.tests.json")),
+      baseline,
+      "e2e",
+    );
+    completeCaseEvidence(
+      await readJSON(resolve(source, "artifacts/fixture-app.json.tests.json")),
+      baseline,
+      "app",
+    );
+    result.expectedHostedCases = e2e.hostedKeys;
     await writeProof(b, {
       ...result,
       ...scope,
@@ -655,7 +725,7 @@ async function main() {
   const build = await readJSON(a);
   boundBuild(build, env);
   if (command === "prepare") {
-    const site = await inspectSite(resolve(b));
+    const site = await inspectPublicArtifact(resolve(b), build.inputInventory);
     must(
       site.manifestDigest === build.manifestDigest &&
         JSON.stringify(site.assets) === JSON.stringify(build.assets) &&
