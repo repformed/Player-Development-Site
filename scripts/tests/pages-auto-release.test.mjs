@@ -21,7 +21,6 @@ import {
   priorWriterGuard,
   pendingGuard,
   proofGuard,
-  inspectSite,
   automaticDeploy,
   automaticRead,
   knownNoWrite,
@@ -34,6 +33,10 @@ import {
   workflowPath,
   templatePin,
 } from "../pages-auto-scope.mjs";
+import {
+  publicBuildInputs,
+  inspectPublicArtifact,
+} from "../pages-public-artifact.mjs";
 const require = createRequire(resolve(root, "package.json")),
   ts = require("typescript"),
   postcss = require("postcss");
@@ -287,18 +290,27 @@ test("repository gate accepts actual pushed public edit but rejects auth/private
 test("dynamic artifact accepts exact known public shape; unexpected function or changed locked bytes fail", async () => {
   const source = resolve(process.env.PUBLIC_TEST_SITE || resolve(root, "dist"));
   // Installed local acceptance uses an existing synthetic/public build, never a provider.
-  const original = await inspectSite(source);
-  assert.equal(Object.keys(original.manifest).length, 84);
+  const inputs = await publicBuildInputs(
+    process.env.PUBLIC_TEST_SOURCE || root,
+  );
+  const original = await inspectPublicArtifact(source, inputs);
+  assert.equal(
+    original.servedFileCount,
+    Object.keys(original.manifest).length - 1,
+  );
   const dir = await mkdtemp(resolve(tmpdir(), "repformed-auto-output-"));
   try {
     await cp(source, resolve(dir, "site"), { recursive: true });
     await writeFile(resolve(dir, "site/_worker.js"), "unexpected");
-    await assert.rejects(inspectSite(resolve(dir, "site")), /file count/);
+    await assert.rejects(
+      inspectPublicArtifact(resolve(dir, "site"), inputs),
+      /Static output/,
+    );
     await rm(resolve(dir, "site/_worker.js"));
     await writeFile(resolve(dir, "site/robots.txt"), "changed");
     await assert.rejects(
-      inspectSite(resolve(dir, "site")),
-      /Unapproved static bytes/,
+      inspectPublicArtifact(resolve(dir, "site"), inputs),
+      /Static byte inventory/,
     );
   } finally {
     await rm(dir, { recursive: true, force: true });
@@ -311,7 +323,28 @@ async function orchestrationFixture() {
     PAGES_CLI: "/fictional/local-cli",
   };
   const site = resolve(process.env.PUBLIC_TEST_SITE || resolve(root, "dist")),
-    b = { ...build(e), ...(await inspectSite(site)) };
+    b = {
+      ...build(e),
+      ...(await inspectPublicArtifact(
+        site,
+        await publicBuildInputs(process.env.PUBLIC_TEST_SOURCE || root),
+      )),
+    };
+  b.expectedHostedCases = JSON.parse(
+    await readFile(
+      resolve(root, ".github/pages-release/public-baseline-cases.json"),
+    ),
+  ).hosted;
+  b.authorization = {
+    kind: "merged-public-pr",
+    sourceSha: b.sourceSha,
+    sourceTree: b.sourceTree,
+    reviewId: 1,
+    reviewerId: "2",
+    reviewedHead: b.sourceSha,
+    reviewedTree: b.sourceTree,
+    reviewSubmittedAt: "2026-11-10T00:00:00Z",
+  };
   const baseline = "00000000-0000-4000-8000-000000000001";
   let canonical = baseline,
     uploadCount = 0,
@@ -340,6 +373,7 @@ async function orchestrationFixture() {
     setSource: (x) => (source = x),
   };
   const ports = {
+    review: async () => b.authorization,
     read: async (path, _token, host) => {
       if (host === "https://api.github.com") {
         if (path.includes("/actions/workflows/")) return { workflow_runs: [] };
@@ -396,7 +430,7 @@ function hostedEvidence(f, preview) {
     attempt: 1,
     deploymentId: preview.deploymentId,
     manifestDigest: f.b.manifestDigest,
-    verifiedFiles: 83,
+    verifiedFiles: f.b.servedFileCount,
     workerSha256: f.b.manifest["sw.js"].sha256,
     workerCacheVersion: f.b.workerCacheVersion,
     files: Object.entries(f.b.manifest)
@@ -411,8 +445,9 @@ function hostedEvidence(f, preview) {
     runId: f.e.GITHUB_RUN_ID,
     attempt: 1,
     suite: "hosted",
-    cases: 86,
-    passed: 86,
+    caseKeys: f.b.expectedHostedCases,
+    cases: f.b.expectedHostedCases.length,
+    passed: f.b.expectedHostedCases.length,
     failed: 0,
     skipped: 0,
     retries: 0,
@@ -661,6 +696,11 @@ test("overlapping A then B: superseded A has known no-write outcome; B can publi
     b.e.GITHUB_SHA = "e".repeat(40);
     b.e.PUBLIC_AUTO_SOURCE_SHA = b.e.GITHUB_SHA;
     b.b.sourceSha = b.e.GITHUB_SHA;
+    b.b.authorization = {
+      ...b.b.authorization,
+      sourceSha: b.e.GITHUB_SHA,
+      reviewedHead: b.e.GITHUB_SHA,
+    };
     b.b.workflowSha = b.e.GITHUB_SHA;
     b.state.setSource(b.e.GITHUB_SHA);
     await automaticDeploy(
@@ -803,6 +843,35 @@ test("preflight consumes full final deployment page using metadata, with no inva
     );
     assert.deepEqual(seen, [1, 2]);
     assert.equal(f.state.count, 1);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+test("main advancement while review is being revalidated prevents provider write", async () => {
+  const f = await orchestrationFixture(),
+    dir = await mkdtemp(resolve(tmpdir(), "auto-review-main-race-"));
+  const original = f.ports.review;
+  f.ports.review = async (...args) => {
+    const review = await original(...args);
+    f.state.setSource("e".repeat(40));
+    return review;
+  };
+  try {
+    await assert.rejects(
+      automaticDeploy(
+        "preview",
+        f.site,
+        f.b,
+        resolve(dir, "preview.json"),
+        f.e,
+        null,
+        null,
+        null,
+        f.ports,
+      ),
+      (e) => knownNoWrite(e),
+    );
+    assert.equal(f.state.count, 0);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
