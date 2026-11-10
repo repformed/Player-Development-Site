@@ -264,11 +264,16 @@ export function publicModuleImports(path, oldText, newText, ts) {
     );
   }
 }
-export async function narrowPublicDelta(source, before, after) {
+export async function narrowPublicDelta(
+  source,
+  before,
+  after,
+  syntaxTools = source,
+) {
   const a = treeInventory(source, before),
     b = treeInventory(source, after),
     changes = [];
-  const require = createRequire(resolve(source, "package.json")),
+  const require = createRequire(resolve(syntaxTools, "package.json")),
     ts = require("typescript"),
     postcss = require("postcss");
   for (const path of new Set([...a.keys(), ...b.keys()])) {

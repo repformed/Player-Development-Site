@@ -179,6 +179,8 @@ export async function inspectSite(site) {
 export function priorWriterGuard(jobs) {
   for (const j of jobs) {
     const stepName = {
+      "Capture accepted production baseline":
+        "Read and bind accepted production",
       "Preview exact public artifact":
         "Capture fresh baseline and upload verified public preview",
       "Promote exact public artifact":
@@ -331,7 +333,7 @@ async function ensureManualIdle(env, ports) {
     }
   }
 }
-async function providerPreflight(build, env, ports) {
+export async function providerPreflight(build, env, ports) {
   await priorRuns(env, ports);
   await ensureManualIdle(env, ports);
   await currentSource(build, env, ports);
@@ -339,6 +341,16 @@ async function providerPreflight(build, env, ports) {
     "/accounts/" + target.accountId + "/pages/projects/" + target.project;
   const project = await ports.read(p, env.CLOUDFLARE_API_TOKEN);
   projectGuard(project, project.canonical_deployment?.id);
+  if (
+    build.baselineIdentity &&
+    project.canonical_deployment?.id !== build.baselineIdentity.deploymentId
+  ) {
+    const error = Error(
+      "Accepted production baseline changed before provider operation",
+    );
+    error.code = "PUBLIC_BASELINE_CHANGED";
+    throw error;
+  }
   for (let page = 1; page <= 100; page++) {
     const list = await ports.read(
       p + "/deployments?per_page=20&page=" + page,
