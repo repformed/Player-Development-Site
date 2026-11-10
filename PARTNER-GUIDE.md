@@ -1,6 +1,6 @@
 # Partner walkthrough
 
-Share [the illustrated website and iPhone guide](https://coachbilliott.github.io/Player-Development-Site/partner-guide.html), or [its 12-page PDF](https://coachbilliott.github.io/Player-Development-Site/partner-guide.pdf). Both can be opened without signing in. The live workspace still requires approved private account access. The native app remains distributed through approved TestFlight access.
+Share [the illustrated website and iPhone guide](https://repformed.com/partner-guide.html), or [its 12-page PDF](https://repformed.com/partner-guide.pdf). Both can be opened without signing in. The live workspace still requires approved private account access. The native app remains distributed through approved TestFlight access.
 
 The guide covers the public website and its one fictional demo, TestFlight and Player Development sign-in, all five account levels, upload and native preparation, private shared drafts, staff approval, complete workout building, Owner assignment, customer practice/resume/progress and optional private video review. It includes a first-run checklist and common questions. The guide follows private pilot build 10; actual account permissions and the installed approved app version remain authoritative.
 

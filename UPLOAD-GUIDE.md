@@ -1,6 +1,6 @@
 # Upload a drill, then build a workout
 
-Open **Content** in the iPhone app, or [Coach studio](https://coachbilliott.github.io/Player-Development-Site/#coach). Use an approved Owner, Manager or Coach account.
+Open **Content** in the iPhone app, or [Coach studio](https://repformed.com/#coach). Use an approved Owner, Manager or Coach account.
 
 ## 1. Choose and prepare the attachment
 
