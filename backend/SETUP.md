@@ -2,7 +2,7 @@
 
 The dedicated project `iilbulpqbuknhdpmtrvm` is connected. Migrations `001-shared-content.sql`, `002-private-profiles.sql`, `003-account-levels.sql`, `004-family-athletes.sql` and `005-content-audiences.sql` were applied once and verified against the live project. Migration `006-assigned-training-and-video-review.sql` is now also installed; it adds private assigned workouts and optional coach video review without opening billing or junior access. Migration `007-training-assignment-cleanup.sql` is also installed. Migration `008-workout-builder.sql` is installed for private workout templates and snapshot assignments. Migration `009-content-review-and-practice-resume.sql` is installed for shared draft approval, private resume and MOV/40 MB shared attachments. Migration `010-account-invitations-and-closure.sql` is installed for private adult invitations and customer Auth/media erasure. Do not rerun migrations 001–010 against this installed schema.
 
-The site URL and exact verification/recovery redirect URLs point to `https://coachbilliott.github.io/Player-Development-Site/`. Email confirmation is required and passwords require at least 12 characters. Management access is supplied securely by the owner; no administrative credential belongs in the repository, browser configuration, test fixtures or chat.
+The site URL and exact verification/recovery redirect URLs point to `https://repformed.com/`. Email confirmation is required and passwords require at least 12 characters. Management access is supplied securely by the owner; no administrative credential belongs in the repository, browser configuration, test fixtures or chat.
 
 ## Current enrollment scope
 

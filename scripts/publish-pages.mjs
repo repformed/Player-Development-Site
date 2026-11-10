@@ -4,8 +4,11 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import process from "node:process";
-import { fileURLToPath, URL } from "node:url";
-import { assertDeploymentIdentity } from "./deployment-identity.mjs";
+import { fileURLToPath } from "node:url";
+import {
+  assertDeploymentIdentity,
+  assertPublishingRepository,
+} from "./deployment-identity.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const git = (args, extraEnv = {}) =>
@@ -18,16 +21,7 @@ const releaseDir = mkdtempSync(join(tmpdir(), "player-development-pages-"));
 try {
   if (git(["status", "--porcelain"]).trim())
     throw new Error("Commit source changes before publishing.");
-  const origin = new URL(git(["remote", "get-url", "origin"]).trim());
-  if (
-    origin.hostname !== "github.com" ||
-    origin.pathname.replace(/\.git$/, "").toLowerCase() !==
-      "/coachbilliott/player-development-site"
-  ) {
-    throw new Error(
-      "Publishing is restricted to the Player Development repository.",
-    );
-  }
+  assertPublishingRepository(git(["remote", "get-url", "origin"]).trim());
   const dist = join(root, "dist");
   assertDeploymentIdentity(readFileSync(join(dist, "index.html"), "utf8"));
   writeFileSync(join(dist, ".nojekyll"), "");

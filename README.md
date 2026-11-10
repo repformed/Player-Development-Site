@@ -8,9 +8,9 @@ A standalone, responsive player-development platform with a sport-neutral brand 
 
 ## Show a partner how it works
 
-The public [Contact page](https://coachbilliott.github.io/Player-Development-Site/#contact) links to the Owner-approved business inbox, **Repformed@gmail.com**, and offers searchable, authored answers about training, accounts, app access and reviews. The email button opens the visitor's email app; it does not claim a message was sent. See [contact and public help](CONTACT-HELP.md) for updates and the separate automatic-email setup.
+The public [Contact page](https://repformed.com/#contact) links to the Owner-approved business inbox, **Repformed@gmail.com**, and offers searchable, authored answers about training, accounts, app access and reviews. The email button opens the visitor's email app; it does not claim a message was sent. See [contact and public help](CONTACT-HELP.md) for updates and the separate automatic-email setup.
 
-[Open the illustrated website and app walkthrough](https://coachbilliott.github.io/Player-Development-Site/partner-guide.html), or [download the PDF](https://coachbilliott.github.io/Player-Development-Site/partner-guide.pdf). The public guide uses fictional screenshots and walks through login, staff tools, uploads, approval, assignment, customer practice and optional video review. See [PARTNER-GUIDE.md](PARTNER-GUIDE.md) for updates and scope.
+[Open the illustrated website and app walkthrough](https://repformed.com/partner-guide.html), or [download the PDF](https://repformed.com/partner-guide.pdf). The public guide uses fictional screenshots and walks through login, staff tools, uploads, approval, assignment, customer practice and optional video review. See [PARTNER-GUIDE.md](PARTNER-GUIDE.md) for updates and scope.
 
 ## Latest connected training workflow
 
@@ -18,13 +18,13 @@ Native TestFlight build **0.1.0 (12)** and the verified website include iPhone M
 
 ## Private member accounts — connected for an adult pilot
 
-Open [Member access](https://coachbilliott.github.io/Player-Development-Site/#account). The dedicated backend is connected for an invite-only adult pilot. Public registration remains closed; existing pilot accounts can sign in and reset their password. The repository now includes adult signup, email verification/recovery, private parent/adult account setup, private player create/edit/delete, identity isolation and server row-level security. Real under-18 enrollment and child self-access remain closed at the database until verified consent/privacy setup is complete. Parents can explore the complete family flow using fictional sample athletes. No demo records are imported. No payment package or price is needed for profile setup.
+Open [Member access](https://repformed.com/#account). The dedicated backend is connected for an invite-only adult pilot. Public registration remains closed; existing pilot accounts can sign in and reset their password. The repository now includes adult signup, email verification/recovery, private parent/adult account setup, private player create/edit/delete, identity isolation and server row-level security. Real under-18 enrollment and child self-access remain closed at the database until verified consent/privacy setup is complete. Parents can explore the complete family flow using fictional sample athletes. No demo records are imported. No payment package or price is needed for profile setup.
 
 See [backend setup and current pilot status](backend/SETUP.md). Migrations 001–011 have been applied to the dedicated owner-controlled project; do not rerun them. Live database privacy checks pass and the existing Owner is verified; broader physical-device/email acceptance remains required. Do not add real child information in the pilot. Full customer account deletion now removes the Auth login and owned media/data after password confirmation. Staff and guardian-managed closure use assisted review. Private reports for assigned matching uploads and parent reviews sync through the backend. Payments and advanced progress measurement remain future work.
 
 ## Private invitations and account closure
 
-Owners can prepare adult Parent/Athlete/Coach/Manager invitations and review activation/cancellation. Recipients accept their intended level after verification and adult privacy acknowledgements. Customer deletion rechecks their password, cleans private clips/data and removes the login; Owners/staff/guardian-managed identities use review. The dedicated project still needs a custom SMTP sender for reliable new-customer email delivery. Public signup, payments and juniors stay closed. See [ACCOUNT-LIFECYCLE.md](ACCOUNT-LIFECYCLE.md) and [account help](https://coachbilliott.github.io/Player-Development-Site/account-help.html).
+Owners can prepare adult Parent/Athlete/Coach/Manager invitations and review activation/cancellation. Recipients accept their intended level after verification and adult privacy acknowledgements. Customer deletion rechecks their password, cleans private clips/data and removes the login; Owners/staff/guardian-managed identities use review. The dedicated project still needs a custom SMTP sender for reliable new-customer email delivery. Public signup, payments and juniors stay closed. See [ACCOUNT-LIFECYCLE.md](ACCOUNT-LIFECYCLE.md) and [account help](https://repformed.com/account-help.html).
 
 ## Account levels
 
@@ -32,7 +32,7 @@ The five access levels are **Owner, Manager, Coach, Parent and Athlete**. Owners
 
 ## Family athletes and workout review
 
-Try [the guided customer demo](https://coachbilliott.github.io/Player-Development-Site/#demo) without signing in. A parent can add a sample athlete, allow or pause self-recording for each individual, then review their reported practice. Switch to that athlete's view to try a guided sample session, and back to Parent view to approve it or request another practice. The Solo athlete journey keeps self-reported history without parent approval. The optional athlete screen is a step within the parent journey, not a separate public role preview. Its fixed fictional profiles/history stay in this browser under `pd-family-demo-v1` and never import into real accounts.
+Try [the guided customer demo](https://repformed.com/#demo) without signing in. A parent can add a sample athlete, allow or pause self-recording for each individual, then review their reported practice. Switch to that athlete's view to try a guided sample session, and back to Parent view to approve it or request another practice. The Solo athlete journey keeps self-reported history without parent approval. The optional athlete screen is a step within the parent journey, not a separate public role preview. Its fixed fictional profiles/history stay in this browser under `pd-family-demo-v1` and never import into real accounts.
 
 For real private pilot profiles, open **My account → Workouts & permissions**. Parents may generate a one-time private connection code for an eligible athlete's separate verified account. Each athlete accesses only that individual profile, not siblings or parent controls. Family reports are pending until parent review; standalone adult practice is labeled self-reported. Server metadata derives titles/minutes from assigned, eligible published uploads. Parent review is not evidence of improved athletic ability. Unfinished practice can be saved privately with Save & leave workout and resumed after reopening/refresh. Current access and content/assignment versions are rechecked; submitted reports and reviews are saved remotely.
 
@@ -40,11 +40,11 @@ The live child gates remain closed. Child self-access additionally requires a tr
 
 ## The website and one customer demo
 
-Open [the website](https://coachbilliott.github.io/Player-Development-Site/). It presents one football training platform; parent-managed and individual accounts are setup options, not separate products or membership tiers. **Try the demo** opens one [guided customer demo](https://coachbilliott.github.io/Player-Development-Site/#demo), with Parent & family and Solo athlete options under **Who are you setting up training for?** There are no public Owner/Manager/Coach previews. Real signed-in accounts open their assigned [private workspace](https://coachbilliott.github.io/Player-Development-Site/#workspace); old staff-preview links now require sign-in. See [the workspace and demo guide](VIEWS-GUIDE.md).
+Open [the website](https://repformed.com/). It presents one football training platform; parent-managed and individual accounts are setup options, not separate products or membership tiers. **Try the demo** opens one [guided customer demo](https://repformed.com/#demo), with Parent & family and Solo athlete options under **Who are you setting up training for?** There are no public Owner/Manager/Coach previews. Real signed-in accounts open their assigned [private workspace](https://repformed.com/#workspace); old staff-preview links now require sign-in. See [the workspace and demo guide](VIEWS-GUIDE.md).
 
 ## Easy workout uploads
 
-Open [Coach studio](https://coachbilliott.github.io/Player-Development-Site/#coach) and sign in with an authorized staff account. Shared website is the default; browser-local practice publishing is also limited to signed-in staff. Choose a file, add purpose, equipment, practice steps, coaching cue and audience, preview and save a private shared draft for review. An Owner/Manager approves publication; Coaches submit their own drafts. New shared uploads can be explicitly saved as a device draft and restored after refresh; they are not cross-device drafts and are cleared on sign-out. Shared uploads default to protected staff review. See the [phone upload guide](UPLOAD-GUIDE.md) for steps, visibility and draft limits.
+Open [Coach studio](https://repformed.com/#coach) and sign in with an authorized staff account. Shared website is the default; browser-local practice publishing is also limited to signed-in staff. Choose a file, add purpose, equipment, practice steps, coaching cue and audience, preview and save a private shared draft for review. An Owner/Manager approves publication; Coaches submit their own drafts. New shared uploads can be explicitly saved as a device draft and restored after refresh; they are not cross-device drafts and are cleared on sign-out. Shared uploads default to protected staff review. See the [phone upload guide](UPLOAD-GUIDE.md) for steps, visibility and draft limits.
 
 ## Complete workout builder
 
@@ -96,7 +96,7 @@ The member app now centers on **Today, Workouts, Progress and Account**. Parents
 
 The native iOS project is in `ios/` with a repeatable Mac simulator build/test workflow. `npm run build:ios` bundles the shared client and synchronizes native plugins; `npm run open:ios` opens Xcode on a Mac. Native sessions use the iOS Keychain. Native build 0.1.0 (12) is verified available in the existing Owner Testing TestFlight group. Unsigned archives and simulator builds remain development artifacts. See [phone app testing](APP-TESTING.md).
 
-The mobile welcome and persistent navigation are also available at https://coachbilliott.github.io/Player-Development-Site/?source=app#app for immediate Safari/home-screen testing. The website continues to use its public homepage. Both clients use the same real account permissions. The single fictional customer demo stays on the public website and is blocked in the native app; demo history never becomes a real profile.
+The mobile welcome and persistent navigation are also available at https://repformed.com/?source=app#app for immediate Safari/home-screen testing. The website continues to use its public homepage. Both clients use the same real account permissions. The single fictional customer demo stays on the public website and is blocked in the native app; demo history never becomes a real profile.
 
 The `#install` screen explains iPhone/Android home-screen installation. The production build includes an app manifest, original local icons and a scoped service worker. After initial online setup, built-in fictional sessions and local progress can reopen offline. Shared resources, sign-in, uploads and updates require a connection; media may not work offline. Updates require a confirmed reload rather than interrupting training. Installing does not sync browser data. This is an installable web app, not an App Store or Google Play release. See [APP-TESTING.md](APP-TESTING.md) for device steps, update behavior and tests.
 
@@ -131,21 +131,21 @@ npm run test:app # builds and checks the production service worker
 
 Tests use fresh isolated browser contexts, original test media, local browser storage, embedded PostgreSQL and intercepted fictional service responses. They do not contact third-party services. Screenshots are generated under `artifacts/`; the HTML report is in `playwright-report/`.
 
-## Published demo and deployment
+## Production hosting and optional fallback
 
-The public sample-data demo is hosted at https://coachbilliott.github.io/Player-Development-Site/ . This repository uses GitHub Pages' branch publishing: source code lives on `main`; the built static website lives on `gh-pages`. Pages automatically builds and deploys when `gh-pages` is updated. Visitors need no account.
+The primary website is https://repformed.com/ (also https://repformed.pages.dev/), served by the existing Cloudflare Pages **Direct Upload** project `repformed` in the Repformed account. Source lives in [repformed/Player-Development-Site](https://github.com/repformed/Player-Development-Site). Production publishes only when explicitly requested; source pushes and checks do not publish it.
 
-After checks pass, commit source changes and run:
+Before an approved production release, refresh and review the intended source, run its relevant checks and build a fresh `dist/` for that exact commit. Use the existing secure Cloudflare connection and installed Wrangler to upload to project `repformed`, production branch `main`. Never reuse a fictional-preview artifact for production. Record the deployed commit/deployment ID and verify the actual public site; a build or upload alone is not live-site acceptance. Report network verification limits without bypassing access restrictions.
+
+`npm run deploy:pages` publishes **only the optional GitHub Pages fallback**, not Repformed production. Its configured project address after the repository transfer is `https://repformed.github.io/Player-Development-Site/`; that address needs separate Pages deployment/public verification before it can be called available. The account-lifecycle function still allows the legacy GitHub Pages origin, not this new origin; fallback account flows need a separate origin/callback review before use. Do not change security settings as part of publishing or reference cleanup. GitHub does not redirect the old owner's Pages website. Only run this command when a fallback release is explicitly requested:
 
 ```sh
 npm run deploy:pages
 ```
 
-The publishing script builds `dist/`, uses an isolated temporary Git index, preserves the current source checkout, and pushes a new commit on top of the current remote `gh-pages` branch. It permits only this repository, verifies the pushed ref, and never force-pushes. A dirty source checkout stops publication. No new credentials, API access, or cloud environment publication is needed for this route; it reuses existing Git access.
+The fallback script builds `dist/`, requires the canonical `repformed/Player-Development-Site` GitHub origin and a clean committed source checkout, then uses an isolated temporary Git index to push a new commit on top of `gh-pages`. It preserves the source checkout, checks build identity and the remote ref, and never force-pushes. It does not configure Cloudflare, DNS, credentials or repository settings.
 
-Check the **pages build and deployment** run in this repository's GitHub Actions page, confirm it succeeded for the published commit, and read the actual deployment URL. An independent HTTP/browser check of the public site is still required when network access permits it. A successful build or push alone is not evidence of a successful live deployment. Network availability depends on the cloud environment. Report any verification limit, and do not bypass the proxy.
-
-`checks.yml` validates source pushes and pull requests. The manual `pages.yml` file is an alternative for repositories configured with GitHub Actions as the Pages source; do not use it to change the current branch publishing configuration. Keep this project separate from unrelated projects and never buy a hosting plan or change repository visibility to deploy the demo.
+Check the fallback's Pages workflow and actual deployment URL after publication. `checks.yml` validates source pull requests and `main` pushes; it does not deploy Cloudflare. The manually dispatched `pages.yml` is an alternative only for repositories already configured with GitHub Actions as their Pages source; do not change the current branch-publishing configuration as part of reference cleanup. Keep this project separate from unrelated projects and do not change visibility or buy hosting to publish.
 
 ## Architecture and future sports
 
