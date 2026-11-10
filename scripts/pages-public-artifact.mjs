@@ -99,6 +99,7 @@ export async function inspectPublicArtifact(site, inputs) {
   };
   await walk(site);
   const generated = inputs.compiler.generated;
+  must(new Set([...files.keys()].map(n=>n.toLowerCase())).size === files.size, "Case-normalized artifact path collision");
   must(
     generated && typeof generated === "object" && !Array.isArray(generated),
     "Compiler file inventory missing",

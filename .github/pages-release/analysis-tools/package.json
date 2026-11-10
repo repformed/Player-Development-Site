@@ -1,0 +1,9 @@
+{
+  "name": "repformed-release-syntax-tools",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "typescript": "5.9.3",
+    "postcss": "8.5.31"
+  }
+}

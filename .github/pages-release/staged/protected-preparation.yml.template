@@ -1,0 +1,81 @@
+# STAGED ONLY: outside .github/workflows; not installed or executable as a repository workflow.
+# A reviewed trusted-controller SHA must replace the placeholder before a separately authorized bootstrap.
+name: Repformed protected source preparation
+on:
+  workflow_dispatch:
+    inputs:
+      source_sha:
+        description: Exact independently selected source commit
+        required: true
+      baseline_sha:
+        description: Fresh verified accepted main source
+        required: true
+permissions:
+  contents: read
+jobs:
+  scope:
+    runs-on: ubuntu-latest
+    outputs:
+      kind: ${{ steps.scope.outputs.kind }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: 0000000000000000000000000000000000000000
+          path: control
+          persist-credentials: false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ inputs.source_sha }}
+          path: source
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24.19.0
+      - name: Dependency-free source classification without any install or provider credential
+        id: scope
+        env:
+          SOURCE_SHA: ${{ inputs.source_sha }}
+          BASELINE_SHA: ${{ inputs.baseline_sha }}
+        run: |
+          node control/scripts/pages-protected-preparation.mjs scope source "$BASELINE_SHA" "$SOURCE_SHA" "$RUNNER_TEMP/scope.json"
+          node -e 'const fs=require("node:fs");const x=JSON.parse(fs.readFileSync(process.env.RUNNER_TEMP+"/scope.json"));fs.appendFileSync(process.env.GITHUB_OUTPUT,"kind="+x.kind+"\n")'
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: protected-scope-not-release-authority
+          path: ${{ runner.temp }}/scope.json
+  dependency_checks:
+    needs: scope
+    if: needs.scope.outputs.kind == 'development-dependencies'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ inputs.source_sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24.19.0
+      - name: Credential-free installation and validation; no changed lifecycle hooks
+        run: |
+          npm ci --ignore-scripts
+          npm audit --json > "$RUNNER_TEMP/audit.json" || test "$?" = 1
+          npm run lint
+          npm run typecheck
+          npm test
+          npm run build
+          npx playwright install --with-deps chromium
+          node scripts/run-pages-fixture-checks.mjs . e2e artifacts/fixture-e2e.json
+          node scripts/run-pages-fixture-checks.mjs . app artifacts/fixture-app.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: protected-candidate-not-release-authority
+          path: |
+            dist/
+            artifacts/
+            ${{ runner.temp }}/audit.json
+
+# No review-token-bearing step loads source node_modules.
+# No provider token, preview, promotion, automatic rollback or deployment job exists here.
+# Before activation: reviewed main routing, exact-tree review, immutable candidate composition,
+# existing hosted acceptance and current-production gates must all be wired and independently reviewed.
