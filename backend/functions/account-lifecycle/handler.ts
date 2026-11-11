@@ -66,6 +66,62 @@ function publicFailure(error: unknown) {
   );
 }
 
+class LifecycleBodyError extends Error {
+  constructor(readonly status: number, message: string) { super(message); }
+}
+/** Bound input only. Never time out/replay a mutating account operation. */
+async function lifecycleBody(request: Request): Promise<Record<string, unknown>> {
+  const reader = request.body?.getReader();
+  if (!reader) throw new LifecycleBodyError(400, "A request body is required.");
+  let stopped = false, cancelled = false;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  let onAbort = () => {};
+  const cancel = () => {
+    if (cancelled) return;
+    cancelled = true;
+    // Cancellation itself can stall; it must not delay the rejection response.
+    try { void reader.cancel().catch(() => {}); } catch { /* Already closed. */ }
+  };
+  const read = async () => {
+    let text = "", bytes = 0;
+    const decoder = new TextDecoder();
+    for (;;) {
+      if (stopped) throw new Error("Body read stopped");
+      const chunk = await reader.read();
+      if (stopped) throw new Error("Body read stopped");
+      if (chunk.done) break;
+      bytes += chunk.value.byteLength;
+      if (bytes > 4096) {
+        cancel(); throw new LifecycleBodyError(413, "Request is too large.");
+      }
+      text += decoder.decode(chunk.value, { stream: true });
+    }
+    const value: unknown = JSON.parse(text + decoder.decode());
+    if (!value || Array.isArray(value) || typeof value !== "object")
+      throw new Error("Invalid body");
+    return value as Record<string, unknown>;
+  };
+  try {
+    return await Promise.race([new Promise<never>((_, reject) => {
+      onAbort = () => {
+        stopped = true; cancel();
+        reject(new LifecycleBodyError(408, "Request interrupted. No account action was started."));
+      };
+      request.signal.addEventListener("abort", onAbort, { once: true });
+      timer = setTimeout(() => {
+        stopped = true; cancel();
+        reject(new LifecycleBodyError(408, "Request body timed out. No account action was started."));
+      }, 10_000);
+      if (request.signal.aborted) onAbort();
+    }), Promise.resolve().then(read)]);
+  } finally {
+    stopped = true;
+    clearTimeout(timer);
+    request.signal.removeEventListener("abort", onAbort);
+    try { reader.releaseLock(); } catch { /* A cancelled read may still settle. */ }
+  }
+}
+
 export function lifecycleHandler(
   backend: LifecycleBackend,
   now = () => Date.now(),
@@ -105,27 +161,10 @@ export function lifecycleHandler(
       return reply(401, { error: "A verified account is required." });
     let body: Record<string, unknown>;
     try {
-      const reader = request.body?.getReader();
-      if (!reader) return reply(400, { error: "A request body is required." });
-      let text = "";
-      const decoder = new TextDecoder();
-      let bytes = 0;
-      for (;;) {
-        const chunk = await reader.read();
-        if (chunk.done) break;
-        bytes += chunk.value.byteLength;
-        if (bytes > 4096) {
-          await reader.cancel();
-          return reply(413, { error: "Request is too large." });
-        }
-        text += decoder.decode(chunk.value, { stream: true });
-      }
-      text += decoder.decode();
-      const parsed = JSON.parse(text);
-      if (!parsed || Array.isArray(parsed) || typeof parsed !== "object")
-        throw new Error();
-      body = parsed;
-    } catch {
+      body = await lifecycleBody(request);
+    } catch (error) {
+      if (error instanceof LifecycleBodyError)
+        return reply(error.status, { error: error.message });
       return reply(400, { error: "Invalid request." });
     }
     const requestId = body.requestId;
