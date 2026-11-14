@@ -207,3 +207,38 @@ describe("real upload progress transport", () => {
     expect(fetch).toHaveBeenCalledOnce();
   });
 });
+
+it("settles a stalled observed upload on timeout, detaches abort and allows a fresh same-path retry", async () => {
+  const instances: StalledXHR[] = [];
+  class StalledXHR {
+    timeout = 0;
+    responseType = "";
+    upload = {};
+    ontimeout?: () => void;
+    onabort?: () => void;
+    constructor() { instances.push(this); }
+    open() {}
+    setRequestHeader() {}
+    send() {}
+    abort() { this.onabort?.(); }
+  }
+  vi.stubGlobal("XMLHttpRequest", StalledXHR);
+  const controller = new AbortController();
+  const remove = vi.spyOn(controller.signal, "removeEventListener");
+  const url = "https://fixture.invalid/storage/v1/object/athlete-review-videos/fictional-clip";
+  const request = trackUpload("athlete-review-videos/fictional-clip", () => undefined,
+    () => progressFetch(url, { method: "POST", body: new Blob(["fictional"]), signal: controller.signal }));
+  void request.catch(() => undefined);
+  try {
+    const xhr = instances[0];
+    expect(xhr.timeout).toBe(300000);
+    expect(xhr.ontimeout).toBeTypeOf("function");
+    xhr.ontimeout!();
+    await expect(request).rejects.toMatchObject({ name: "TimeoutError" });
+    expect(remove).toHaveBeenCalledWith("abort", expect.any(Function));
+    const ordinary = vi.fn().mockResolvedValue(new Response("fresh"));
+    vi.stubGlobal("fetch", ordinary);
+    await progressFetch(url, { method: "POST", body: new Blob(["fictional"]) });
+    expect(ordinary).toHaveBeenCalledOnce();
+  } finally { controller.abort(); }
+});

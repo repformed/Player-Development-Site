@@ -1,6 +1,11 @@
 name: iPhone app build and simulator tests
 on:
   workflow_dispatch:
+    inputs:
+      closed_gate:
+        description: Build a backend-disabled unsigned validation candidate
+        type: boolean
+        default: false
 permissions:
   contents: read
 jobs:
@@ -20,9 +25,15 @@ jobs:
           xcodebuild -version
           xcodebuild -showsdks
       - name: Install and bundle the mobile app
+        env:
+          PD_IOS_CLOSED_GATE: ${{ inputs.closed_gate }}
         run: |
           npm ci
-          npm run build:ios
+          if [ "$PD_IOS_CLOSED_GATE" = "true" ]; then
+            node scripts/build-ios-closed.mjs
+          else
+            npm run build:ios
+          fi
       - name: Generate Xcode test targets
         run: |
           brew install xcodegen
@@ -39,6 +50,9 @@ jobs:
           xcrun simctl bootstatus "$PD_SIMULATOR_UDID" -b
           set -o pipefail
           xcodebuild test -project ios/App/App.xcodeproj -scheme App -configuration Debug -destination "platform=iOS Simulator,id=$PD_SIMULATOR_UDID" -derivedDataPath mobile-builds/DerivedData -resultBundlePath mobile-builds/iPhone-tests.xcresult -parallel-testing-enabled NO CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=- | tee mobile-builds/simulator-build.log
+          if [ "${{ inputs.closed_gate }}" = "true" ]; then
+            python3 scripts/verify-closed-ios.py mobile-builds/DerivedData/Build/Products/Debug-iphonesimulator/App.app mobile-builds/closed-ios-input.json > mobile-builds/closed-ios-simulator.json
+          fi
           xcrun simctl launch "$PD_SIMULATOR_UDID" com.coachbilliott.playerdevelopment
           xcrun simctl io "$PD_SIMULATOR_UDID" screenshot mobile-builds/iPhone-app.png
           ditto -c -k --sequesterRsrc --keepParent mobile-builds/DerivedData/Build/Products/Debug-iphonesimulator/App.app mobile-builds/PlayerDevelopment-iOS-Simulator.app.zip
@@ -46,6 +60,9 @@ jobs:
         run: |
           set -o pipefail
           xcodebuild archive -project ios/App/App.xcodeproj -scheme App -configuration Release -destination 'generic/platform=iOS' -archivePath mobile-builds/PlayerDevelopment.xcarchive -derivedDataPath mobile-builds/DeviceDerivedData CODE_SIGNING_ALLOWED=NO | tee mobile-builds/device-build.log
+          if [ "${{ inputs.closed_gate }}" = "true" ]; then
+            python3 scripts/verify-closed-ios.py mobile-builds/PlayerDevelopment.xcarchive/Products/Applications/App.app mobile-builds/closed-ios-input.json > mobile-builds/closed-ios-device.json
+          fi
           ditto -c -k --sequesterRsrc --keepParent mobile-builds/PlayerDevelopment.xcarchive mobile-builds/PlayerDevelopment-unsigned.xcarchive.zip
       - name: Export simulator test reports and screenshots
         if: always()

@@ -27,6 +27,8 @@ export function progressFetch(
     const xhr = new XMLHttpRequest();
     xhr.open(init.method || "POST", url);
     xhr.responseType = "blob";
+    // A transport budget, not a review-delivery promise. A retry keeps the reserved ID.
+    xhr.timeout = 5 * 60 * 1000;
     new Headers(init.headers).forEach((value, key) =>
       xhr.setRequestHeader(key, value),
     );
@@ -58,6 +60,13 @@ export function progressFetch(
     xhr.onerror = () => {
       cleanup();
       reject(new TypeError("The upload connection was interrupted."));
+    };
+    xhr.ontimeout = () => {
+      cleanup();
+      reject(new DOMException(
+        "The upload timed out. Retry the same video or check your history.",
+        "TimeoutError",
+      ));
     };
     xhr.onabort = () => {
       cleanup();

@@ -1,3 +1,4 @@
+import { boundedReviewRpc } from "./reviewRpc";
 import { trackUpload, type UploadProgress } from "./uploadProgress";
 import { serviceSchema } from "./reviewServices";
 import { groupSchema } from "./reviewGroups";
@@ -89,9 +90,9 @@ export async function inspectVideo(file: File): Promise<number> {
 export class VideoReviews {
   constructor(readonly client: SupabaseClient) {}
   async state(player: PrivatePlayer) {
-    const { data, error } = await this.client.rpc("athlete_video_state", {
+    const { data, error } = await boundedReviewRpc(signal => this.client.rpc("athlete_video_state", {
       target_profile: player.id,
-    });
+    }).abortSignal(signal), true);
     if (error)
       throw new Error("Video review could not be loaded. Reconnect and retry.");
     return videoStateSchema.parse(data);
@@ -106,14 +107,14 @@ export class VideoReviews {
   ) {
     const problem = videoFileError(file);
     if (problem) throw new Error(problem);
-    const { data, error } = await this.client.rpc("begin_athlete_video", {
+    const { data, error } = await boundedReviewRpc(signal => this.client.rpc("begin_athlete_video", {
       review_id: id,
       target_profile: player.id,
       training_id: trainingId,
       media_type: file.type,
       byte_size: file.size,
       duration_seconds: seconds,
-    });
+    }).abortSignal(signal));
     if (error)
       throw new Error(
         error.message.startsWith("Video storage is full.")
@@ -153,9 +154,9 @@ export class VideoReviews {
             cacheControl: "0",
           }),
     );
-    const finished = await this.client.rpc("finish_athlete_video", {
+    const finished = await boundedReviewRpc(signal => this.client.rpc("finish_athlete_video", {
       review_id: draft.id,
-    });
+    }).abortSignal(signal));
     if (finished.error)
       throw new Error(
         uploaded.error
