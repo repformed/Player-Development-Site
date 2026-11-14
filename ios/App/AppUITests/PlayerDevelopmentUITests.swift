@@ -23,6 +23,19 @@ final class PlayerDevelopmentUITests: XCTestCase {
         app.launch()
         XCTAssertTrue(app.links["Log in to your account"].waitForExistence(timeout: 30))
         app.links["Log in to your account"].tap()
+        let closedEntry = app.staticTexts["Private profiles are being connected."]
+        if closedEntry.waitForExistence(timeout: 5) {
+            XCTAssertTrue(app.staticTexts["Registration is not open yet. No real player information is collected on this screen."].exists)
+            XCTAssertFalse(app.textFields.element.exists)
+            XCTAssertFalse(app.secureTextFields.element.exists)
+            XCTAssertFalse(app.buttons["Sign in securely"].exists)
+            XCTAssertFalse(app.links["Try the sample demo"].exists)
+            let help = app.links["Sign-in help"]
+            XCTAssertTrue(help.exists)
+            help.tap()
+            XCTAssertTrue(app.staticTexts["Your app, explained."].waitForExistence(timeout: 15))
+            return
+        }
         let signIn = app.buttons["Sign in securely"]
         for _ in 0..<5 {
             if signIn.exists { break }

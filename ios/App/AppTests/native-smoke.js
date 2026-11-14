@@ -39,7 +39,22 @@ if (document.querySelector('a[href="#demo"]')) throw new Error('Customer demo le
 location.hash = 'demo';
 await wait(() => location.hash === '#app', 'blocked native demo route');
 location.hash = 'account';
-await wait(() => document.querySelector('input[type="email"]'), 'native account login');
+const config = await fetch('/content-config.json').then(response => {
+  if (!response.ok) throw new Error('Bundled account configuration is unavailable');
+  return response.json();
+});
+if (config.enabled === false) {
+  if (config.url !== '' || config.publishableKey !== '') throw new Error('Disabled backend retains configuration');
+  await wait(() => [...document.querySelectorAll('h2')].some(heading => heading.textContent === 'Private profiles are being connected.'), 'closed native account entry');
+  if (document.querySelector('input[type="email"], input[type="password"]')) throw new Error('Closed account entry exposes credential inputs');
+  if (document.querySelector('.family-demo')) throw new Error('Fictional demo is visible in closed native entry');
+  const help = await wait(() => document.querySelector('a[href="#app-help"]'), 'closed sign-in help');
+  if (help.textContent.trim() !== 'Sign-in help') throw new Error('Closed account recovery label changed');
+  help.click();
+  await wait(() => [...document.querySelectorAll('h1')].some(heading => heading.textContent === 'Your app, explained.'), 'closed account help navigation');
+} else {
+  await wait(() => document.querySelector('input[type="email"]'), 'native account login');
+}
 if (document.querySelector('.family-demo')) throw new Error('Fictional demo is visible in native login');
 location.hash = 'app';
 return true;
