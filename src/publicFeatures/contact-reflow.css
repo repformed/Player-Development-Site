@@ -1,0 +1,43 @@
+/* Public-only text enlargement support. Private layouts retain their existing styles. */
+.website-layout:not(.is-private) .contact-intro h1 {
+  overflow-wrap: anywhere;
+}
+.website-layout:not(.is-private) .contact-grid {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+.website-layout:not(.is-private) .contact-email-card {
+  min-width: 0;
+}
+.website-layout:not(.is-private) .contact-email-card > select {
+  min-width: 0;
+  max-width: 100%;
+}
+.website-layout:not(.is-private) .contact-email-card > .button {
+  white-space: normal;
+}
+.website-layout:not(.is-private) .header-inner {
+  height: auto;
+  min-height: 80px;
+  padding-block: 10px;
+  flex-wrap: wrap;
+}
+.website-layout:not(.is-private) .header-actions,
+.website-layout:not(.is-private) .desktop-nav {
+  min-width: 0;
+  flex-wrap: wrap;
+}
+@media (max-width: 900px) {
+  .website-layout:not(.is-private) .header-inner {
+    min-height: 76px;
+  }
+}
+@media (max-width: 720px) {
+  .website-layout:not(.is-private) .contact-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 640px) {
+  .website-layout:not(.is-private) .header-inner {
+    min-height: 72px;
+  }
+}
