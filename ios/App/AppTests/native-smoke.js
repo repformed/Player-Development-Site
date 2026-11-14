@@ -48,7 +48,7 @@ if (config.enabled === false) {
   await wait(() => [...document.querySelectorAll('h2')].some(heading => heading.textContent === 'Private profiles are being connected.'), 'closed native account entry');
   if (document.querySelector('input[type="email"], input[type="password"]')) throw new Error('Closed account entry exposes credential inputs');
   if (document.querySelector('.family-demo')) throw new Error('Fictional demo is visible in closed native entry');
-  const help = await wait(() => document.querySelector('a[href="#app-help"]'), 'closed sign-in help');
+  const help = await wait(() => document.querySelector('main.member-page .member-panel a.button[href="#app-help"]'), 'closed sign-in help');
   if (help.textContent.trim() !== 'Sign-in help') throw new Error('Closed account recovery label changed');
   help.click();
   await wait(() => [...document.querySelectorAll('h1')].some(heading => heading.textContent === 'Your app, explained.'), 'closed account help navigation');
