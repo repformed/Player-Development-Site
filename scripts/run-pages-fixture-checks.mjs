@@ -116,6 +116,7 @@ try {
       "tests/service-policies.spec.ts",
       "tests/public-home-focus.spec.ts",
       "tests/public-usability.spec.ts",
+      "tests/interest-reference-recovery.spec.ts",
       "tests/public-features/",
     );
   if (listOnly) args.push("--list");

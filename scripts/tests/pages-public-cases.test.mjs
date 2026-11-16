@@ -46,6 +46,15 @@ test("mandatory identities remain required while new feature cases and counts ar
     /Mandatory/,
   );
 });
+test("intake recovery cases are mandatory hosted expectations when collected from source", () => {
+  const r = report();
+  r.suites[0].file = "interest-reference-recovery.spec.ts";
+  r.suites[0].title = "interest-reference-recovery.spec.ts";
+  r.suites[0].specs[0].file = "interest-reference-recovery.spec.ts";
+  const keys = reportCases(r).map((c) => c.key);
+  assert.deepEqual(completeCaseEvidence(r, { e2e: keys }, "e2e").hostedKeys, keys);
+  assert.throws(() => completeCaseEvidence(report(), { hosted: reportCases(report()).map((c) => c.key) }, "hosted", keys), /Hosted collection/);
+});
 test("missing, duplicate, retried, skipped, expected-failing or conditionally hidden hosted tests block", () => {
   const r = report(),
     b = { hosted: reportCases(r).map((c) => c.key) };

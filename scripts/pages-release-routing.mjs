@@ -21,7 +21,7 @@ import {
   sameSourceAuthorization,
 } from "./pages-public-evidence.mjs";
 export const operationalBootstrapBase =
-  "c15a0e08f0b85c04ba70c380042e794220cb3805";
+  "4e50cdf234652beadc59f119b7806b93f2e065b7";
 const git = (source, args) =>
   execFileSync("git", args, { cwd: source, encoding: "utf8" }).trimEnd();
 const read = (source, ref, path) =>
