@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { afterEach, describe, it, expect, vi } from "vitest";
 import {
   lifecycleHandler,
   type LifecycleBackend,
@@ -74,6 +74,76 @@ const invitation = {
   email: "Invited@EXAMPLE.test",
   role: "coach",
 };
+afterEach(() => vi.useRealTimers());
+it("bounds a stalled body before any invitation or deletion work starts", async () => {
+  vi.useFakeTimers();
+  const f = setup();
+  const request = req(invitation);
+  const cancel = vi.fn(async () => {});
+  let release!: (value: ReadableStreamReadResult<Uint8Array>) => void;
+  Object.defineProperty(request, "body", { value: {
+    getReader: () => ({ read: () => new Promise(resolve => { release = resolve; }), cancel }),
+  } });
+  let settled = false;
+  const response = f.handle(request).then(value => { settled = true; return value; });
+  await vi.advanceTimersByTimeAsync(10_001);
+  expect(settled).toBe(true);
+  expect((await response).status).toBe(408);
+  release({ done: true, value: undefined });
+  await vi.advanceTimersByTimeAsync(0);
+  expect(f.backend.reserveInvitation).not.toHaveBeenCalled();
+  expect(f.backend.beginClosure).not.toHaveBeenCalled();
+  expect(cancel).toHaveBeenCalledOnce();
+});
+it("does not wait for a stalled cancellation after rejecting an oversized body", async () => {
+  vi.useFakeTimers();
+  const f = setup();
+  const request = req(invitation);
+  Object.defineProperty(request, "body", { value: { getReader: () => ({
+    read: async () => ({ done: false, value: new Uint8Array(4097) }),
+    cancel: () => new Promise(() => {}),
+  }) } });
+  let settled = false;
+  const response = f.handle(request).then(value => { settled = true; return value; });
+  await vi.advanceTimersByTimeAsync(10_001);
+  expect(settled).toBe(true);
+  expect((await response).status).toBe(413);
+  expect(f.backend.reserveInvitation).not.toHaveBeenCalled();
+  expect(f.backend.beginClosure).not.toHaveBeenCalled();
+});
+it("rejects an interrupted body without starting or replaying an account action", async () => {
+  const f = setup();
+  const controller = new AbortController();
+  const request = new Request(req(invitation), { signal: controller.signal });
+  const cancel = vi.fn(async () => {});
+  Object.defineProperty(request, "body", { value: {
+    getReader: () => ({ read: () => new Promise(() => {}), cancel }),
+  } });
+  controller.abort();
+  expect((await f.handle(request)).status).toBe(408);
+  expect(cancel).toHaveBeenCalledOnce();
+  expect(f.backend.reserveInvitation).not.toHaveBeenCalled();
+  expect(f.backend.beginClosure).not.toHaveBeenCalled();
+});
+it("rejects an abort during an outstanding read and ignores its late completion", async () => {
+  const f = setup();
+  const controller = new AbortController();
+  const request = new Request(req(invitation), { signal: controller.signal });
+  let release!: (value: ReadableStreamReadResult<Uint8Array>) => void;
+  let markStarted!: () => void;
+  const started = new Promise<void>(resolve => { markStarted = resolve; });
+  Object.defineProperty(request, "body", { value: { getReader: () => ({
+    read: () => { markStarted(); return new Promise(resolve => { release = resolve; }); },
+    cancel: async () => {},
+  }) } });
+  const response = f.handle(request);
+  await started; controller.abort();
+  expect((await response).status).toBe(408);
+  release({ done: false, value: new TextEncoder().encode(JSON.stringify(invitation)) });
+  await Promise.resolve(); await Promise.resolve();
+  expect(f.backend.reserveInvitation).not.toHaveBeenCalled();
+  expect(f.backend.beginClosure).not.toHaveBeenCalled();
+});
 describe("trusted account lifecycle handler", () => {
   it("rejects absent, invalid and unverified sessions before privileged work", async () => {
     const { backend, handle } = setup();
