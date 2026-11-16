@@ -5,6 +5,7 @@ export const hostedFiles = [
   "service-policies.spec.ts",
   "public-home-focus.spec.ts",
   "public-usability.spec.ts",
+  "interest-reference-recovery.spec.ts",
 ];
 export function reportCases(report) {
   const cases = [];

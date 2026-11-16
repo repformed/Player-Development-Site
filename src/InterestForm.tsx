@@ -9,6 +9,16 @@ import {
   type InterestPackage,
 } from "./interestContract";
 
+function newInterestReference() {
+  try {
+    return crypto.randomUUID();
+  } catch {
+    throw new Error(
+      "We could not prepare this request. Your details remain here; try again or use the email option below.",
+    );
+  }
+}
+
 export function InterestForm({
   endpoint,
   packageChoice,
@@ -67,12 +77,12 @@ export function InterestForm({
           launchUpdates,
           LAUNCH_NOTICE_VERSION,
         ]);
-        const requestId =
-          request.current?.signature === signature
-            ? request.current.id
-            : crypto.randomUUID();
-        request.current = { signature, id: requestId };
         try {
+          const requestId =
+            request.current?.signature === signature
+              ? request.current.id
+              : newInterestReference();
+          request.current = { signature, id: requestId };
           await sendInterest(endpoint, {
             id: requestId,
             name,
